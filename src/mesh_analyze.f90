@@ -19,7 +19,6 @@ CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE calcvols()
-    REAL(8) :: totalvol1
     REAL(8) :: a(3),b(3),c(3),d(3)
     INTEGER :: i
 
@@ -27,12 +26,14 @@ CONTAINS
 
     minreg=MINVAL(el_tag(:))
     maxreg=MAXVAL(el_tag(:))
-    ALLOCATE(tetvol(num_tets),reg_vol(minreg:maxreg),tets_in_reg(minreg:maxreg))
+    ALLOCATE(tetvol(num_tets),reg_vol(minreg:maxreg),tets_in_reg(minreg:maxreg),&
+        reg_vol_sd(minreg:maxreg))
     tets_in_reg=0
     tetvol=0
-    totalvol1=0
+    tot_vol=0
     reg_vol=0
     prog=0
+
     !compute tet volumes and add to both total volumes and region volumes
     DO i=1,num_tets
       a(:)=vertex(element(i,1),:)
@@ -40,16 +41,32 @@ CONTAINS
       c(:)=vertex(element(i,3),:)
       d(:)=vertex(element(i,4),:)
       tetvol(i)=ABS((-c(2)*d(1)+b(2)*(-c(1)+d(1))+b(1)*(c(2)-d(2))+c(1)*d(2))*(a(3)-d(3))+(a(1)-d(1)) &
-        *(-c(3)*d(2)+b(3)*(-c(2)+d(2))+b(2)*(c(3)-d(3))+c(2)*d(3))+(a(2)-d(2))*(b(3)*(c(1)-d(1)) &
-        +c(3)*d(1)-c(1)*d(3)+b(1)*(-c(3)+d(3))))/6
-        reg_vol(el_tag(i))=reg_vol(el_tag(i))+tetvol(i)
+          *(-c(3)*d(2)+b(3)*(-c(2)+d(2))+b(2)*(c(3)-d(3))+c(2)*d(3))+(a(2)-d(2))*(b(3)*(c(1)-d(1)) &
+          +c(3)*d(1)-c(1)*d(3)+b(1)*(-c(3)+d(3))))/6
+      reg_vol(el_tag(i))=reg_vol(el_tag(i))+tetvol(i)
       tets_in_reg(el_tag(i))=tets_in_reg(el_tag(i))+1
-      totalvol1=totalvol1+tetvol(i)
+      tot_vol=tot_vol+tetvol(i)
       IF(MOD(i,CEILING(num_tets*1.0D0/(max_prog-1.0D0))) .EQ. 0)THEN
         WRITE(*,'(A)',ADVANCE='NO')'*'
         prog=prog+1
       ENDIF
     ENDDO
+
+    !compute volume standard deviations
+    tot_vol_sd=0.0
+    reg_vol_sd=0.0
+    DO i=1,num_tets
+      tot_vol_sd=tot_vol_sd+(tetvol(i)-tot_vol/(num_tets*1.0D0))**2
+      IF(tets_in_reg(el_tag(i)) .NE. 0)THEN
+        reg_vol_sd(el_tag(i))=reg_vol_sd(el_tag(i))+ &
+            (tetvol(i)-reg_vol(el_tag(i))/(tets_in_reg(el_tag(i))*1.0D0))**2
+      ENDIF
+    ENDDO
+    tot_vol_sd=SQRT(tot_vol_sd/(num_tets-1.0D0))
+    DO i=minreg,maxreg
+      IF(tets_in_reg(i) .NE. 0)reg_vol_sd(i)=SQRT(reg_vol_sd(i)/(tets_in_reg(i)-1.0D0))
+    ENDDO
+
     DO i=prog,max_prog
       WRITE(*,'(A)',ADVANCE='NO')'*'
     ENDDO

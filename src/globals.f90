@@ -50,17 +50,17 @@ MODULE globals
   !region number of tets (minreg:maxreg)
   INTEGER,ALLOCATABLE :: tets_in_reg(:)
 
-  !region and total volumes (minreg:maxreg)
-  REAL(8), ALLOCATABLE :: reg_vol(:)
+  !region volumes and standard deviation (minreg:maxreg)
+  REAL(8), ALLOCATABLE :: reg_vol(:),reg_vol_sd(:)
 
-  !total volume
-  REAL(8) :: tot_vol
+  !total volume and standard deviation
+  REAL(8) :: tot_vol,tot_vol_sd
 
-  !region maximum, minimum, average and standard deviation skew (minreg:maxreg)
+  !region average and standard deviation skew (minreg:maxreg)
   REAL(8), ALLOCATABLE :: reg_avg_skew(:),reg_sd_skew(:)
 
-  !total maximum, minimum, average and standard deviation skew
-  REAL(8) :: tot_max_skew,tot_min_skew,tot_avg_skew,tot_sd_skew
+  !total average and standard deviation skew
+  REAL(8) :: tot_avg_skew,tot_sd_skew
 
   !pi
   REAL(8),PARAMETER :: PI=4.D0*DATAN(1.D0)
