@@ -25,6 +25,7 @@ SRC := \
 				globals.f90 \
 				mesh_analyze.f90 \
 				boundary_conditions.f90 \
+				out_stats.f90 \
 				read_thrm.f90 \
 				read_gmsh.f90
 
@@ -95,7 +96,8 @@ boundary_conditions.o boundary_conditions.mod: boundary_conditions.f90 \
  globals.mod
 globals.o globals.mod: globals.f90
 main.o: main.f90 globals.mod read_gmsh.mod read_thrm.mod mesh_analyze.mod \
- boundary_conditions.mod
+ boundary_conditions.mod out_stats.mod
 mesh_analyze.o mesh_analyze.mod: mesh_analyze.f90 globals.mod
 read_gmsh.o read_gmsh.mod: read_gmsh.f90 globals.mod
 read_thrm.o read_thrm.mod: read_thrm.f90 globals.mod
+out_stats.o out_stats.mod: out_stats.f90 globals.mod

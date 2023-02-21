@@ -6,6 +6,7 @@
 PROGRAM openmeshqualityanalyzer
   USE globals
   USE read_gmsh
+  USE out_stats
   USE read_thrm
   USE mesh_analyze
   USE boundary_conditions
@@ -60,6 +61,8 @@ PROGRAM openmeshqualityanalyzer
   WRITE(*,'(A)')'----------------------- Computing mesh skewness:'
   CALL comp_skew()
 
+  WRITE(*,'(A)')'---------------------- Outputting results to '//TRIM(ADJUSTL(mesh_infile))//'_stats.csv'
+  CALL output_statistics()
   WRITE(*,'(A)')'--------------------------------------------------------------------------------'
   WRITE(*,'(A)')'--------------------------------------------------------------------------------'
   WRITE(*,'(A)')'--------------------------------------------------------------------------------'

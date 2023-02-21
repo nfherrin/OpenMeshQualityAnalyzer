@@ -44,6 +44,24 @@ MODULE globals
   !side flatnesses, ordered same as BCs.
   LOGICAL :: side_flat(6)=.FALSE.
 
+  !minimum and maximum region bounds
+  INTEGER :: minreg=0,maxreg=0
+
+  !region number of tets (minreg:maxreg)
+  INTEGER,ALLOCATABLE :: tets_in_reg(:)
+
+  !region and total volumes (minreg:maxreg)
+  REAL(8), ALLOCATABLE :: reg_vol(:)
+
+  !total volume
+  REAL(8) :: tot_vol
+
+  !region maximum, minimum, average and standard deviation skew (minreg:maxreg)
+  REAL(8), ALLOCATABLE :: reg_avg_skew(:),reg_sd_skew(:)
+
+  !total maximum, minimum, average and standard deviation skew
+  REAL(8) :: tot_max_skew,tot_min_skew,tot_avg_skew,tot_sd_skew
+
   !pi
   REAL(8),PARAMETER :: PI=4.D0*DATAN(1.D0)
 CONTAINS
