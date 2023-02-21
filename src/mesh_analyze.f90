@@ -82,8 +82,10 @@ CONTAINS
     REAL(8) :: a_side
     !volume of the regular tet in the circumsphere
     REAL(8) :: vol_reg
-    !Total cell skew
+    !Total mesh average cell skew
     REAL(8) :: tot_avg_skew=0.0D0
+    !Total mesh skew standard deviation
+    REAL(8) :: tot_sd_kew=0.0D0
 
     cell_skew=0.0
     DO i=1,num_tets
@@ -95,11 +97,19 @@ CONTAINS
       !compute the cell skew
       cell_skew(i)=(vol_reg-tetvol(i))/vol_reg
 
-      !cell skew statistics
+      !cell skew average
       tot_avg_skew=tot_avg_skew+cell_skew(i)
     ENDDO
     tot_avg_skew=tot_avg_skew/(num_tets*1.0D0)
-    WRITE(*,*)'Mesh Average Skew: ',tot_avg_skew
+    !compute skew standard deviation
+    DO i=1,num_tets
+      tot_sd_kew=tot_sd_kew+(cell_skew(i)-tot_avg_skew)**2
+    ENDDO
+    tot_sd_kew=SQRT(tot_sd_kew/(num_tets-1.0D0))
+    WRITE(*,'(A,ES16.8)')'Mesh min skew: ',MINVAL(cell_skew)
+    WRITE(*,'(A,ES16.8)')'Mesh max skew: ',MAXVAL(cell_skew)
+    WRITE(*,'(A,ES16.8)')'Mesh average skew: ',tot_avg_skew
+    WRITE(*,'(A,ES16.8)')'Mesh skew standard deviation: ',tot_sd_kew
   ENDSUBROUTINE comp_skew
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
