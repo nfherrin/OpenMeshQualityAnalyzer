@@ -11,6 +11,7 @@ MODULE mesh_analyze
 
   !tet volumes
   REAL(8), ALLOCATABLE :: tetvol(:)
+  INTEGER, ALLOCATABLE :: tets_in_reg(:)
 CONTAINS
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -22,7 +23,6 @@ CONTAINS
     REAL(8) :: totalvol1
     REAL(8) :: a(3),b(3),c(3),d(3)
     REAL(8), ALLOCATABLE :: regvol(:)
-    INTEGER, ALLOCATABLE :: tets_in_reg(:)
     INTEGER :: i,minreg,maxreg
 
     WRITE(*,'(A)',ADVANCE='NO')'Progress:'
@@ -78,6 +78,8 @@ CONTAINS
     REAL(8) :: cell_skew(num_tets)
     !counting indeces
     INTEGER :: i
+    !bounds of region sizes
+    INTEGER :: minreg,maxreg
     !side length of regular tet in the circumsphere
     REAL(8) :: a_side
     !volume of the regular tet in the circumsphere
@@ -86,8 +88,19 @@ CONTAINS
     REAL(8) :: tot_avg_skew=0.0D0
     !Total mesh skew standard deviation
     REAL(8) :: tot_sd_kew=0.0D0
+    !region average cell skew
+    REAL(8),ALLOCATABLE ::  reg_avg_skew(:)
+    !region skew standard deviation
+    REAL(8),ALLOCATABLE ::  reg_sd_skew(:)
+
+    minreg=MINVAL(el_tag(:))
+    maxreg=MAXVAL(el_tag(:))
+    ALLOCATE(reg_avg_skew(minreg:maxreg),reg_sd_skew(minreg:maxreg))
 
     cell_skew=0.0
+    reg_avg_skew=0.0
+    reg_sd_skew=0.0
+    !compute tet skews
     DO i=1,num_tets
       !compute the side of the regular tet in the circumsphere of the tet
       a_side=4.0D0*sphere_rad(vertex(element(i,1),:),vertex(element(i,2),:),vertex(element(i,3),:), &
@@ -99,17 +112,34 @@ CONTAINS
 
       !cell skew average
       tot_avg_skew=tot_avg_skew+cell_skew(i)
+      reg_avg_skew(el_tag(i))=reg_avg_skew(el_tag(i))+cell_skew(i)
     ENDDO
     tot_avg_skew=tot_avg_skew/(num_tets*1.0D0)
+    DO i=minreg,maxreg
+      IF(tets_in_reg(i) .GT. 0)reg_avg_skew(i)=reg_avg_skew(i)/(tets_in_reg(i)*1.0D0)
+    ENDDO
+
     !compute skew standard deviation
     DO i=1,num_tets
       tot_sd_kew=tot_sd_kew+(cell_skew(i)-tot_avg_skew)**2
+      reg_sd_skew(el_tag(i))=reg_sd_skew(el_tag(i))+(cell_skew(i)-reg_avg_skew(el_tag(i)))**2
     ENDDO
     tot_sd_kew=SQRT(tot_sd_kew/(num_tets-1.0D0))
+    DO i=minreg,maxreg
+      IF(tets_in_reg(i) .GT. 0)reg_sd_skew(i)=SQRT(reg_sd_skew(i)/(tets_in_reg(i)-1.0D0))
+    ENDDO
+
+    !output total mesh skew information
     WRITE(*,'(A,ES16.8)')'Mesh min skew: ',MINVAL(cell_skew)
     WRITE(*,'(A,ES16.8)')'Mesh max skew: ',MAXVAL(cell_skew)
     WRITE(*,'(A,ES16.8)')'Mesh average skew: ',tot_avg_skew
     WRITE(*,'(A,ES16.8)')'Mesh skew standard deviation: ',tot_sd_kew
+
+    !output region based skew information
+    DO i=minreg,maxreg
+      WRITE(*,'(A,I0,A,ES16.8)')"Region ",i," average skew ",reg_avg_skew(i)
+      WRITE(*,'(A,I0,A,ES16.8)')"Region ",i," skew standard deviation ",reg_sd_skew(i)
+    ENDDO
   ENDSUBROUTINE comp_skew
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
