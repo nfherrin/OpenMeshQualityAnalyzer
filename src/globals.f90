@@ -25,19 +25,20 @@ MODULE globals
   !progress bar counting
   INTEGER, PARAMETER :: max_prog=70
 
-  !vertex data
+  !vertex data (num_verts,3) locations of each vertex
   REAL(8), ALLOCATABLE :: vertex(:,:)
 
-  !element data
+  !element data (num_tets,4) indices of vertices of element
   INTEGER, ALLOCATABLE :: element(:,:)
 
-  !element region tags
+  !element region tags (num_tets)
   INTEGER, ALLOCATABLE :: el_tag(:)
 
-  !adjacency list
+  !adjacency list (num_tets*4,4) first column is one element id, second column is that element's face, third column is other element id, fourth column is that other element's face
+  !last two columns are zero for boundaries
   INTEGER, ALLOCATABLE :: adj_list(:,:)
 
-  !boundary conditions data. num_bcf,data first data column is element id and second data column is face id
+  !boundary conditions data. (num_bcf,2) first data column is element id and second data column is face id
   INTEGER, ALLOCATABLE :: bc_data(:,:)
 
   !side flatnesses, ordered same as BCs.
