@@ -62,6 +62,12 @@ MODULE globals
   !total average and standard deviation skew
   REAL(8) :: tot_avg_skew,tot_sd_skew
 
+  !region average and standard deviation aspect ratio (minreg:maxreg)
+  REAL(8), ALLOCATABLE :: reg_avg_ar(:),reg_sd_ar(:)
+
+  !total average and standard deviation aspec ratio
+  REAL(8) :: tot_avg_ar,tot_sd_ar
+
   !pi
   REAL(8),PARAMETER :: PI=4.D0*DATAN(1.D0)
 CONTAINS

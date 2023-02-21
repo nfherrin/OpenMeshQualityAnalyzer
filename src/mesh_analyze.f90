@@ -7,7 +7,7 @@ MODULE mesh_analyze
   USE globals
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: calcvols,comp_skew
+  PUBLIC :: calcvols,comp_skew,comp_ar
 
   !tet volumes
   REAL(8), ALLOCATABLE :: tetvol(:)
@@ -135,54 +135,128 @@ CONTAINS
     WRITE(*,*)
   ENDSUBROUTINE comp_skew
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !computes the circumsphere radius for a given tet
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  REAL(8) FUNCTION sphere_rad(a,b,c,d)
-    REAL(8), INTENT(IN) :: a(3),c(3),b(3),d(3)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !calculate aspect ratio of the mesh
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    SUBROUTINE comp_ar()
+      !aspect ratio of each tet
+      REAL(8) :: cell_ar(num_tets)
+      !counting indeces
+      INTEGER :: i
+      !length of the sides of a given tet
+      REAL(8) :: llen(6)
 
-    REAL(8) :: ba(3),ca(3),da(3)
-    REAL(8) :: len_ba,len_ca,len_da
-    REAL(8) :: cross_cd(3),cross_db(3),cross_bc(3)
-    REAL(8) :: denominator
-    REAL(8) :: circ(3)
+      ALLOCATE(reg_avg_ar(minreg:maxreg),reg_sd_ar(minreg:maxreg))
 
-    ba(1)=b(1)-a(1)
-    ba(2)=b(2)-a(2)
-    ba(3)=b(3)-a(3)
+      WRITE(*,'(A)',ADVANCE='NO')'Progress:'
+      prog=0
 
-    ca(1)=c(1)-a(1)
-    ca(2)=c(2)-a(2)
-    ca(3)=c(3)-a(3)
+      cell_ar=0.0
+      reg_avg_ar=0.0
+      reg_sd_ar=0.0
+      !compute tet ars
+      DO i=1,num_tets
+        !compute the length of each of the six sides
+        llen=0
+        llen(1)=line_length(vertex(element(i,1),:),vertex(element(i,2),:))
+        llen(2)=line_length(vertex(element(i,1),:),vertex(element(i,3),:))
+        llen(3)=line_length(vertex(element(i,1),:),vertex(element(i,4),:))
+        llen(4)=line_length(vertex(element(i,2),:),vertex(element(i,3),:))
+        llen(5)=line_length(vertex(element(i,2),:),vertex(element(i,4),:))
+        llen(6)=line_length(vertex(element(i,3),:),vertex(element(i,4),:))
+        !compute the cell ar
+        cell_ar(i)=MAXVAL(llen)/MINVAL(llen)
 
-    da(1)=d(1)-a(1)
-    da(2)=d(2)-a(2)
-    da(3)=d(3)-a(3)
+        !cell ar average
+        tot_avg_ar=tot_avg_ar+cell_ar(i)
+        reg_avg_ar(el_tag(i))=reg_avg_ar(el_tag(i))+cell_ar(i)
+        IF(MOD(i,CEILING(num_tets*1.0D0/(max_prog-1.0D0))) .EQ. 0)THEN
+          WRITE(*,'(A)',ADVANCE='NO')'*'
+          prog=prog+1
+        ENDIF
+      ENDDO
+      tot_avg_ar=tot_avg_ar/(num_tets*1.0D0)
+      DO i=minreg,maxreg
+        IF(tets_in_reg(i) .GT. 0)reg_avg_ar(i)=reg_avg_ar(i)/(tets_in_reg(i)*1.0D0)
+      ENDDO
 
-    len_ba=ba(1)*ba(1)+ba(2)*ba(2)+ba(3)*ba(3);
-    len_ca=ca(1)*ca(1)+ca(2)*ca(2)+ca(3)*ca(3);
-    len_da=da(1)*da(1)+da(2)*da(2)+da(3)*da(3);
+      !compute ar standard deviation
+      DO i=1,num_tets
+        tot_sd_ar=tot_sd_ar+(cell_ar(i)-tot_avg_ar)**2
+        reg_sd_ar(el_tag(i))=reg_sd_ar(el_tag(i))+(cell_ar(i)-reg_avg_ar(el_tag(i)))**2
+      ENDDO
+      tot_sd_ar=SQRT(tot_sd_ar/(num_tets-1.0D0))
+      DO i=minreg,maxreg
+        IF(tets_in_reg(i) .GT. 0)reg_sd_ar(i)=SQRT(reg_sd_ar(i)/(tets_in_reg(i)-1.0D0))
+      ENDDO
 
-    cross_cd(1)=ca(2)*da(3)-da(2)*ca(3);
-    cross_cd(2)=ca(3)*da(1)-da(3)*ca(1);
-    cross_cd(3)=ca(1)*da(2)-da(1)*ca(2);
+      DO i=prog,max_prog
+        WRITE(*,'(A)',ADVANCE='NO')'*'
+      ENDDO
+      WRITE(*,*)
+    ENDSUBROUTINE comp_ar
 
-    cross_db(1)=da(2)*ba(3)-ba(2)*da(3);
-    cross_db(2)=da(3)*ba(1)-ba(3)*da(1);
-    cross_db(3)=da(1)*ba(2)-ba(1)*da(2);
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !computes line length between two points
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    REAL(8) FUNCTION sphere_rad(a,b,c,d)
+      REAL(8), INTENT(IN) :: a(3),c(3),b(3),d(3)
 
-    cross_bc(1)=ba(2)*ca(3)-ca(2)*ba(3);
-    cross_bc(2)=ba(3)*ca(1)-ca(3)*ba(1);
-    cross_bc(3)=ba(1)*ca(2)-ca(1)*ba(2);
+      REAL(8) :: ba(3),ca(3),da(3)
+      REAL(8) :: len_ba,len_ca,len_da
+      REAL(8) :: cross_cd(3),cross_db(3),cross_bc(3)
+      REAL(8) :: denominator
+      REAL(8) :: circ(3)
 
-    denominator=0.5D0/(ba(1)*cross_cd(1)+ba(2)*cross_cd(2)+ba(3)*cross_cd(3));
+      ba(1)=b(1)-a(1)
+      ba(2)=b(2)-a(2)
+      ba(3)=b(3)-a(3)
 
-    circ(1)=(len_ba*cross_cd(1)+len_ca*cross_db(1)+len_da*cross_bc(1))*denominator
-    circ(2)=(len_ba*cross_cd(2)+len_ca*cross_db(2)+len_da*cross_bc(2))*denominator
-    circ(3)=(len_ba*cross_cd(3)+len_ca*cross_db(3)+len_da*cross_bc(3))*denominator
+      ca(1)=c(1)-a(1)
+      ca(2)=c(2)-a(2)
+      ca(3)=c(3)-a(3)
 
-    sphere_rad=SQRT(circ(1)**2+circ(2)**2+circ(3)**2)
-  ENDFUNCTION sphere_rad
+      da(1)=d(1)-a(1)
+      da(2)=d(2)-a(2)
+      da(3)=d(3)-a(3)
+
+      len_ba=ba(1)*ba(1)+ba(2)*ba(2)+ba(3)*ba(3);
+      len_ca=ca(1)*ca(1)+ca(2)*ca(2)+ca(3)*ca(3);
+      len_da=da(1)*da(1)+da(2)*da(2)+da(3)*da(3);
+
+      cross_cd(1)=ca(2)*da(3)-da(2)*ca(3);
+      cross_cd(2)=ca(3)*da(1)-da(3)*ca(1);
+      cross_cd(3)=ca(1)*da(2)-da(1)*ca(2);
+
+      cross_db(1)=da(2)*ba(3)-ba(2)*da(3);
+      cross_db(2)=da(3)*ba(1)-ba(3)*da(1);
+      cross_db(3)=da(1)*ba(2)-ba(1)*da(2);
+
+      cross_bc(1)=ba(2)*ca(3)-ca(2)*ba(3);
+      cross_bc(2)=ba(3)*ca(1)-ca(3)*ba(1);
+      cross_bc(3)=ba(1)*ca(2)-ca(1)*ba(2);
+
+      denominator=0.5D0/(ba(1)*cross_cd(1)+ba(2)*cross_cd(2)+ba(3)*cross_cd(3));
+
+      circ(1)=(len_ba*cross_cd(1)+len_ca*cross_db(1)+len_da*cross_bc(1))*denominator
+      circ(2)=(len_ba*cross_cd(2)+len_ca*cross_db(2)+len_da*cross_bc(2))*denominator
+      circ(3)=(len_ba*cross_cd(3)+len_ca*cross_db(3)+len_da*cross_bc(3))*denominator
+
+      sphere_rad=SQRT(circ(1)**2+circ(2)**2+circ(3)**2)
+    ENDFUNCTION sphere_rad
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !computes the circumsphere radius for a given tet
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      REAL(8) FUNCTION line_length(a,b)
+        REAL(8), INTENT(IN) :: a(3),b(3)
+
+        line_length=SQRT((a(1)-b(1))**2+(a(2)-b(2))**2+(a(3)-b(3))**2)
+      ENDFUNCTION line_length
 END MODULE mesh_analyze
