@@ -6,16 +6,14 @@ EXE := OpenMeshQualityAnalyzer
 EXT := .exe
 
 all:			TYPE :=
-MPparallel:    TYPE := _MP
 debug:    TYPE := _Debug
 catch:    TYPE := _Catch
 coverage: TYPE := _Coverage
 
-all:      OPT := -O3
-MPparallel: OPT := -O3 -fopenmp
-debug:    OPT := -O0 -g -fbacktrace -ffpe-trap=zero,overflow,underflow
-catch:    OPT := -O0 -g -Wall -W -Wsurprising -Werror
-coverage: OPT := -O0 -g --coverage
+all:      OPT := -O3 -Wall -Werror
+debug:    OPT := -O0 -g -fbacktrace -ffpe-trap=zero,overflow,underflow -fcheck=all -Wall -Werror
+catch:    OPT := -O0 -g -Wall -W -Wsurprising -Wextra -Werror
+coverage: OPT := -O0 -g --coverage -Wall -Werror
 
 #-----------------------------------------------------------------------------------
 #Add source files as necessary
@@ -23,10 +21,11 @@ coverage: OPT := -O0 -g --coverage
 #rule declaration. Add these items to FILTER
 #-----------------------------------------------------------------------------------
 SRC := \
-				main.f90 	      	\
-				globals.f90        					\
-				mesh_analyze.f90      					\
-				boundary_conditions.f90      					\
+				main.f90 \
+				globals.f90 \
+				mesh_analyze.f90 \
+				boundary_conditions.f90 \
+				read_thrm.f90 \
 				read_gmsh.f90
 
 OBJ := $(SRC:.f90=.o)
@@ -95,7 +94,8 @@ $(EXE): $(OBJ) $(CONT_OBJ) $(LIB_OBJ)
 boundary_conditions.o boundary_conditions.mod: boundary_conditions.f90 \
  globals.mod
 globals.o globals.mod: globals.f90
-main.o: main.f90 globals.mod read_gmsh.mod mesh_analyze.mod \
+main.o: main.f90 globals.mod read_gmsh.mod read_thrm.mod mesh_analyze.mod \
  boundary_conditions.mod
 mesh_analyze.o mesh_analyze.mod: mesh_analyze.f90 globals.mod
 read_gmsh.o read_gmsh.mod: read_gmsh.f90 globals.mod
+read_thrm.o read_thrm.mod: read_thrm.f90 globals.mod
