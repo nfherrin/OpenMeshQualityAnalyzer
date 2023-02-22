@@ -18,19 +18,19 @@ CONTAINS
   SUBROUTINE adjacency_calc()
     INTEGER :: i,og_face(3),adj_idx
 
-    DO i=1,num_tets
+    DO i=1,tot_tets
       CALL orderverts(tet(i))
     ENDDO
 
-    ALLOCATE(tbound_cond(num_tets*4,2))
+    ALLOCATE(tbound_cond(tot_tets*4,2))
     tbound_cond=0
     !loop over all tets
     adj_idx=0
-    num_bcf=0
+    tot_bcf=0
     prog=0
     WRITE(*,'(A)',ADVANCE='NO')'Progress:'
-    DO i=1,num_tets
-      IF(MOD(i,CEILING(num_tets*1.0/(max_prog-1.0))) .EQ. 0)THEN
+    DO i=1,tot_tets
+      IF(MOD(i,CEILING(tot_tets*1.0/(max_prog-1.0))) .EQ. 0)THEN
         WRITE(*,'(A)',ADVANCE='NO')'*'
         prog=prog+1
       ENDIF
@@ -47,10 +47,10 @@ CONTAINS
       og_face=(/tet(i)%corner(1)%p%id,tet(i)%corner(2)%p%id,tet(i)%corner(3)%p%id/)
       CALL find_adj(og_face,i,3,adj_idx)
     ENDDO
-    ALLOCATE(bc_data(num_bcf,2),bc_side(num_bcf))
+    ALLOCATE(bc_data(tot_bcf,2),bc_side(tot_bcf))
     bc_data=0
     bc_side=0
-    DO i=1,num_bcf
+    DO i=1,tot_bcf
       bc_data(i,:)=tbound_cond(i,:)
     ENDDO
 
@@ -72,7 +72,7 @@ CONTAINS
     LOGICAL :: match
 
     match=.FALSE.
-    DO j=1,num_tets
+    DO j=1,tot_tets
       !compare for first face
       comp_face=(/tet(j)%corner(2)%p%id,tet(j)%corner(3)%p%id,tet(j)%corner(4)%p%id/)
       CALL check_face(face,comp_face,el_idx,j,faceid,0,adj_idx,match)
@@ -91,14 +91,14 @@ CONTAINS
       IF(match)EXIT
     ENDDO
     !if we go through the whole thing and don't exit
-    IF(j .EQ. num_tets+1)THEN
+    IF(j .EQ. tot_tets+1)THEN
       !we didn't find a matching face so it's a boundary condition
       adj_idx=adj_idx+1
       tet(el_idx)%adj_id(faceid+1)=0
       tet(el_idx)%adj_face(faceid+1)=0
-      num_bcf=num_bcf+1
-      tbound_cond(num_bcf,1)=el_idx
-      tbound_cond(num_bcf,2)=faceid
+      tot_bcf=tot_bcf+1
+      tbound_cond(tot_bcf,1)=el_idx
+      tbound_cond(tot_bcf,2)=faceid
     ENDIF
   ENDSUBROUTINE find_adj
 
@@ -131,7 +131,7 @@ CONTAINS
 
     !sides are assumed to be flat, and if they are not this is set to false.
     side_flat=.TRUE.
-    DO i=1,num_bcf
+    DO i=1,tot_bcf
       el_id=bc_data(i,1)
       face_idx=0
       !assign extruded and face boundary points

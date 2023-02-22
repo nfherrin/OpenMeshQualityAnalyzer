@@ -33,8 +33,8 @@ CONTAINS
     ENDDO
     WRITE(30,'(A,A)',ADVANCE='NO')'total, '
     WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_vol,', '
-    WRITE(30,'(I0,A)',ADVANCE='NO')num_tets,', '
-    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_vol/(num_tets*1.0D0),', '
+    WRITE(30,'(I0,A)',ADVANCE='NO')tot_tets,', '
+    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_vol/(tot_tets*1.0D0),', '
     WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_vol_sd,', '
     WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_avg_skew,', '
     WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_sd_skew,', '

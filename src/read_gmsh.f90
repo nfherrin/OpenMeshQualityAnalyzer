@@ -59,9 +59,9 @@ CONTAINS
     INTEGER :: num_entities,minnode,maxnode
     INTEGER :: temp_int,loc_num_nodes,i,j,node_indx
     !get the nodes info
-    READ(20,*)num_entities,num_verts,minnode,maxnode
-    IF(minnode .NE. 1 .OR. maxnode .NE. num_verts)STOP 'nodes should be indexed 1 to amount'
-    ALLOCATE(vertex(num_verts))
+    READ(20,*)num_entities,tot_verts,minnode,maxnode
+    IF(minnode .NE. 1 .OR. maxnode .NE. tot_verts)STOP 'nodes should be indexed 1 to amount'
+    ALLOCATE(vertex(tot_verts))
     vertex(:)%x=0
     vertex(:)%y=0
     vertex(:)%z=0
@@ -93,7 +93,7 @@ CONTAINS
     ALLOCATE(temp_array(numel,5))
     IF(minel .NE. 1 .OR. maxel .NE. numel)STOP 'elements should be indexed 1 to amount'
     !read in all node data
-    num_tets=0
+    tot_tets=0
     el_indx=0
     prog=0
     WRITE(*,'(A)',ADVANCE='NO')'Progress:'
@@ -101,7 +101,7 @@ CONTAINS
       READ(20,*)el_dim,ent_tag,temp_int,loc_num_el
       !actually counting the tets
       IF(el_dim .EQ. 3)THEN
-        num_tets=num_tets+loc_num_el
+        tot_tets=tot_tets+loc_num_el
         !get data since this is a tet set
         DO j=1,loc_num_el
           el_indx=el_indx+1
@@ -120,8 +120,8 @@ CONTAINS
       ENDIF
     ENDDO
     !allocate elements and element tags
-    ALLOCATE(tet(num_tets))
-    DO i=1,num_tets
+    ALLOCATE(tet(tot_tets))
+    DO i=1,tot_tets
       DO j=1,4
         tet(i)%corner(j)%p => vertex(temp_array(i,j))
       ENDDO

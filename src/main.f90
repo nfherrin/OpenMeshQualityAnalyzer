@@ -37,7 +37,7 @@ PROGRAM openmeshqualityanalyzer
     IF(tchar1 .EQ. "1" .AND. tchar2 .EQ. "1")mesh_format="thrm"
   ENDIF
 
-  IF(mesh_format .EQ. "") STOP "Mesh format not recognized, currently on gmsh and thrm supported"
+  IF(mesh_format .EQ. "") STOP "Mesh format not recognized, currently only gmsh and thrm supported"
 
   CLOSE(20)
 

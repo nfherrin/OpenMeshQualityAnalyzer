@@ -67,18 +67,40 @@ MODULE mesh_types
   TYPE, ABSTRACT :: base_mesh_type
     !mesh id (0 for total mesh)
     INTEGER :: id=0
+    !number of elements
+    INTEGER :: num_el
+    !element average skew
+    REAL(8) :: skew_avg
+    !element skew standard deviation
+    REAL(8) :: skew_sd
+    !element average aspect ratio
+    REAL(8) :: ar_avg
+    !element aspect ratio standard deviation
+    REAL(8) :: ar_sd
   ENDTYPE
 
   !the 2d mesh type
   TYPE, EXTENDS(base_mesh_type) :: mesh_type_2d
     !triangle elements in the mesh
     TYPE(element_type_2d), POINTER :: tri(:)
+    !total area
+    REAL(8) :: area
+    !average tri area
+    REAL(8) :: area_avg
+    !tri area standard deviation
+    REAL(8) :: area_sd
   ENDTYPE
 
   !the 3d mesh type
   TYPE, EXTENDS(base_mesh_type) :: mesh_type_3d
     !tet elements in the mesh
-    TYPE(element_type_2d), POINTER :: tet(:)
+    TYPE(element_type_3d), POINTER :: tet(:)
+    !total volume
+    REAL(8) :: vol
+    !average tet volume
+    REAL(8) :: vol_avg
+    !tet volume standard deviation
+    REAL(8) :: vol_sd
   ENDTYPE
 CONTAINS
 

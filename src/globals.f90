@@ -12,13 +12,13 @@ MODULE globals
   CHARACTER(200) :: mesh_infile
 
   !number of vertices
-  INTEGER :: num_verts
+  INTEGER :: tot_verts
 
   !number of tets
-  INTEGER :: num_tets
+  INTEGER :: tot_tets
 
   !number of boundary condition faces
-  INTEGER :: num_bcf
+  INTEGER :: tot_bcf
 
   !progress bar counting
   INTEGER :: prog
