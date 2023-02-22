@@ -20,14 +20,6 @@ CONTAINS
     INTEGER :: i
 
     WRITE(*,'(A)',ADVANCE='NO')'Progress:'
-
-    minreg=MINVAL(tet(:)%reg)
-    maxreg=MAXVAL(tet(:)%reg)
-    ALLOCATE(reg_vol(minreg:maxreg),tets_in_reg(minreg:maxreg),&
-        reg_vol_sd(minreg:maxreg))
-    tets_in_reg=0
-    tot_vol=0
-    reg_vol=0
     prog=0
 
     !compute tet volumes and add to both total volumes and region volumes
@@ -39,28 +31,32 @@ CONTAINS
       tet(i)%vol=ABS((-c%y*d%x+b%y*(-c%x+d%x)+b%x*(c%y-d%y)+c%x*d%y)*(a%z-d%z)+(a%x-d%x) &
           *(-c%z*d%y+b%z*(-c%y+d%y)+b%y*(c%z-d%z)+c%y*d%z)+(a%y-d%y)*(b%z*(c%x-d%x) &
           +c%z*d%x-c%x*d%z+b%x*(-c%z+d%z)))/6
-      reg_vol(tet(i)%reg)=reg_vol(tet(i)%reg)+tet(i)%vol
-      tets_in_reg(tet(i)%reg)=tets_in_reg(tet(i)%reg)+1
-      tot_vol=tot_vol+tet(i)%vol
+
+      reg_mesh(tet(i)%reg)%vol=reg_mesh(tet(i)%reg)%vol+tet(i)%vol
+      reg_mesh(tet(i)%reg)%num_el=reg_mesh(tet(i)%reg)%num_el+1
+      tot_mesh%vol=tot_mesh%vol+tet(i)%vol
       IF(MOD(i,CEILING(tot_tets*1.0D0/(max_prog-1.0D0))) .EQ. 0)THEN
         WRITE(*,'(A)',ADVANCE='NO')'*'
         prog=prog+1
       ENDIF
     ENDDO
+    tot_mesh%vol_avg=tot_mesh%vol/(tot_mesh%num_el*1.0D0)
+    DO i=minreg,maxreg
+      reg_mesh(i)%vol_avg=reg_mesh(i)%vol/(reg_mesh(i)%num_el*1.0D0)
+    ENDDO
 
     !compute volume standard deviations
-    tot_vol_sd=0.0
-    reg_vol_sd=0.0
     DO i=1,tot_tets
-      tot_vol_sd=tot_vol_sd+(tet(i)%vol-tot_vol/(tot_tets*1.0D0))**2
-      IF(tets_in_reg(tet(i)%reg) .NE. 0)THEN
-        reg_vol_sd(tet(i)%reg)=reg_vol_sd(tet(i)%reg)+ &
-            (tet(i)%vol-reg_vol(tet(i)%reg)/(tets_in_reg(tet(i)%reg)*1.0D0))**2
+      tot_mesh%vol_sd=tot_mesh%vol_sd+(tet(i)%vol-tot_mesh%vol_avg)**2
+      IF(reg_mesh(tet(i)%reg)%num_el .NE. 0)THEN
+        reg_mesh(tet(i)%reg)%vol_sd=reg_mesh(tet(i)%reg)%vol_sd+ &
+            (tet(i)%vol-reg_mesh(tet(i)%reg)%vol_avg)**2
       ENDIF
     ENDDO
-    tot_vol_sd=SQRT(tot_vol_sd/(tot_tets-1.0D0))
+    tot_mesh%vol_sd=SQRT(tot_mesh%vol_sd/(tot_tets-1.0D0))
     DO i=minreg,maxreg
-      IF(tets_in_reg(i) .NE. 0)reg_vol_sd(i)=SQRT(reg_vol_sd(i)/(tets_in_reg(i)-1.0D0))
+      IF(reg_mesh(i)%num_el .NE. 0)reg_mesh(i)%vol_sd=SQRT(reg_mesh(i)%vol_sd/&
+          (reg_mesh(i)%num_el-1.0D0))
     ENDDO
 
     DO i=prog,max_prog
@@ -82,13 +78,9 @@ CONTAINS
     !volume of the regular tet in the circumsphere
     REAL(8) :: vol_reg
 
-    ALLOCATE(reg_avg_skew(minreg:maxreg),reg_sd_skew(minreg:maxreg))
-
     WRITE(*,'(A)',ADVANCE='NO')'Progress:'
     prog=0
 
-    reg_avg_skew=0.0
-    reg_sd_skew=0.0
     !compute tet skews
     DO i=1,tot_tets
       !compute the side of the regular tet in the circumsphere of the tet
@@ -99,26 +91,29 @@ CONTAINS
       tet(i)%skew=(vol_reg-tet(i)%vol)/vol_reg
 
       !cell skew average
-      tot_avg_skew=tot_avg_skew+tet(i)%skew
-      reg_avg_skew(tet(i)%reg)=reg_avg_skew(tet(i)%reg)+tet(i)%skew
+      tot_mesh%skew_avg=tot_mesh%skew_avg+tet(i)%skew
+      reg_mesh(tet(i)%reg)%skew_avg=reg_mesh(tet(i)%reg)%skew_avg+tet(i)%skew
       IF(MOD(i,CEILING(tot_tets*1.0D0/(max_prog-1.0D0))) .EQ. 0)THEN
         WRITE(*,'(A)',ADVANCE='NO')'*'
         prog=prog+1
       ENDIF
     ENDDO
-    tot_avg_skew=tot_avg_skew/(tot_tets*1.0D0)
+    tot_mesh%skew_avg=tot_mesh%skew_avg/(tot_tets*1.0D0)
     DO i=minreg,maxreg
-      IF(tets_in_reg(i) .GT. 0)reg_avg_skew(i)=reg_avg_skew(i)/(tets_in_reg(i)*1.0D0)
+      IF(reg_mesh(i)%num_el .GT. 0)reg_mesh(i)%skew_avg=reg_mesh(i)%skew_avg/ &
+          (reg_mesh(i)%num_el*1.0D0)
     ENDDO
 
     !compute skew standard deviation
     DO i=1,tot_tets
-      tot_sd_skew=tot_sd_skew+(tet(i)%skew-tot_avg_skew)**2
-      reg_sd_skew(tet(i)%reg)=reg_sd_skew(tet(i)%reg)+(tet(i)%skew-reg_avg_skew(tet(i)%reg))**2
+      tot_mesh%skew_sd=tot_mesh%skew_sd+(tet(i)%skew-tot_mesh%skew_avg)**2
+      reg_mesh(tet(i)%reg)%skew_sd=reg_mesh(tet(i)%reg)%skew_sd+(tet(i)%skew &
+          -reg_mesh(tet(i)%reg)%skew_avg)**2
     ENDDO
-    tot_sd_skew=SQRT(tot_sd_skew/(tot_tets-1.0D0))
+    tot_mesh%skew_sd=SQRT(tot_mesh%skew_sd/(tot_tets-1.0D0))
     DO i=minreg,maxreg
-      IF(tets_in_reg(i) .GT. 0)reg_sd_skew(i)=SQRT(reg_sd_skew(i)/(tets_in_reg(i)-1.0D0))
+      IF(reg_mesh(i)%num_el .GT. 0)reg_mesh(i)%skew_sd=SQRT(reg_mesh(i)%skew_sd/ &
+          (reg_mesh(i)%num_el-1.0D0))
     ENDDO
 
     DO i=prog,max_prog
@@ -138,13 +133,9 @@ CONTAINS
       !length of the sides of a given tet
       REAL(8) :: llen(6)
 
-      ALLOCATE(reg_avg_ar(minreg:maxreg),reg_sd_ar(minreg:maxreg))
-
       WRITE(*,'(A)',ADVANCE='NO')'Progress:'
       prog=0
 
-      reg_avg_ar=0.0
-      reg_sd_ar=0.0
       !compute tet ars
       DO i=1,tot_tets
         !compute the length of each of the six sides
@@ -159,26 +150,29 @@ CONTAINS
         tet(i)%aspect_ratio=MAXVAL(llen)/MINVAL(llen)
 
         !cell ar average
-        tot_avg_ar=tot_avg_ar+tet(i)%aspect_ratio
-        reg_avg_ar(tet(i)%reg)=reg_avg_ar(tet(i)%reg)+tet(i)%aspect_ratio
+        tot_mesh%ar_avg=tot_mesh%ar_avg+tet(i)%aspect_ratio
+        reg_mesh(tet(i)%reg)%ar_avg=reg_mesh(tet(i)%reg)%ar_avg+tet(i)%aspect_ratio
         IF(MOD(i,CEILING(tot_tets*1.0D0/(max_prog-1.0D0))) .EQ. 0)THEN
           WRITE(*,'(A)',ADVANCE='NO')'*'
           prog=prog+1
         ENDIF
       ENDDO
-      tot_avg_ar=tot_avg_ar/(tot_tets*1.0D0)
+      tot_mesh%ar_avg=tot_mesh%ar_avg/(tot_tets*1.0D0)
       DO i=minreg,maxreg
-        IF(tets_in_reg(i) .GT. 0)reg_avg_ar(i)=reg_avg_ar(i)/(tets_in_reg(i)*1.0D0)
+        IF(reg_mesh(i)%num_el .GT. 0)reg_mesh(i)%ar_avg=reg_mesh(i)%ar_avg/ &
+            (reg_mesh(i)%num_el*1.0D0)
       ENDDO
 
       !compute ar standard deviation
       DO i=1,tot_tets
-        tot_sd_ar=tot_sd_ar+(tet(i)%aspect_ratio-tot_avg_ar)**2
-        reg_sd_ar(tet(i)%reg)=reg_sd_ar(tet(i)%reg)+(tet(i)%aspect_ratio-reg_avg_ar(tet(i)%reg))**2
+        tot_mesh%ar_sd=tot_mesh%ar_sd+(tet(i)%aspect_ratio-tot_mesh%ar_avg)**2
+        reg_mesh(tet(i)%reg)%ar_sd=reg_mesh(tet(i)%reg)%ar_sd+(tet(i)%aspect_ratio- &
+            reg_mesh(tet(i)%reg)%ar_avg)**2
       ENDDO
-      tot_sd_ar=SQRT(tot_sd_ar/(tot_tets-1.0D0))
+      tot_mesh%ar_sd=SQRT(tot_mesh%ar_sd/(tot_tets-1.0D0))
       DO i=minreg,maxreg
-        IF(tets_in_reg(i) .GT. 0)reg_sd_ar(i)=SQRT(reg_sd_ar(i)/(tets_in_reg(i)-1.0D0))
+        IF(reg_mesh(i)%num_el .GT. 0)reg_mesh(i)%ar_sd=SQRT(reg_mesh(i)%ar_sd/ &
+            (reg_mesh(i)%num_el-1.0D0))
       ENDDO
 
       DO i=prog,max_prog

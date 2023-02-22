@@ -26,10 +26,10 @@ MODULE globals
   !progress bar counting
   INTEGER, PARAMETER :: max_prog=70
 
-  !vertex data (num_verts) locations of each vertex
+  !vertex data (tot_verts) locations of each vertex
   TYPE(vertex_type), TARGET, ALLOCATABLE :: vertex(:)
 
-  !element data (num_tets,4) indices of vertices of element
+  !element data (tot_tets) indices of vertices of element
   TYPE(element_type_3d), ALLOCATABLE :: tet(:)
 
   !boundary conditions data. (num_bcf,2) first data column is element id and second data column is face id
@@ -41,26 +41,11 @@ MODULE globals
   !minimum and maximum region bounds
   INTEGER :: minreg=0,maxreg=0
 
-  !region number of tets (minreg:maxreg)
-  INTEGER,ALLOCATABLE :: tets_in_reg(:)
+  !total mesh
+  TYPE(mesh_type_3d) :: tot_mesh
 
-  !region volumes and standard deviation (minreg:maxreg)
-  REAL(8), ALLOCATABLE :: reg_vol(:),reg_vol_sd(:)
-
-  !total volume and standard deviation
-  REAL(8) :: tot_vol,tot_vol_sd
-
-  !region average and standard deviation skew (minreg:maxreg)
-  REAL(8), ALLOCATABLE :: reg_avg_skew(:),reg_sd_skew(:)
-
-  !total average and standard deviation skew
-  REAL(8) :: tot_avg_skew,tot_sd_skew
-
-  !region average and standard deviation aspect ratio (minreg:maxreg)
-  REAL(8), ALLOCATABLE :: reg_avg_ar(:),reg_sd_ar(:)
-
-  !total average and standard deviation aspec ratio
-  REAL(8) :: tot_avg_ar,tot_sd_ar
+  !region based mesh
+  TYPE(mesh_type_3d), ALLOCATABLE :: reg_mesh(:)
 
   !pi
   REAL(8),PARAMETER :: PI=4.D0*DATAN(1.D0)

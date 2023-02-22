@@ -21,25 +21,25 @@ CONTAINS
 
     DO i=minreg,maxreg
       WRITE(30,'(I0,A)',ADVANCE='NO')i,', '
-      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_vol(i),', '
-      WRITE(30,'(I0,A)',ADVANCE='NO')tets_in_reg(i),', '
-      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_vol(i)/(tets_in_reg(i)*1.0D0),', '
-      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_vol_sd(i),', '
-      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_avg_skew(i),', '
-      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_sd_skew(i),', '
-      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_avg_ar(i),', '
-      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_sd_ar(i),', '
+      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%vol,', '
+      WRITE(30,'(I0,A)',ADVANCE='NO')reg_mesh(i)%num_el,', '
+      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%vol_avg,', '
+      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%vol_sd,', '
+      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%skew_avg,', '
+      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%skew_sd,', '
+      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%ar_avg,', '
+      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%ar_sd,', '
       WRITE(30,*)
     ENDDO
     WRITE(30,'(A,A)',ADVANCE='NO')'total, '
-    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_vol,', '
-    WRITE(30,'(I0,A)',ADVANCE='NO')tot_tets,', '
-    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_vol/(tot_tets*1.0D0),', '
-    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_vol_sd,', '
-    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_avg_skew,', '
-    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_sd_skew,', '
-    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_avg_ar,', '
-    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_sd_ar,', '
+    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%vol,', '
+    WRITE(30,'(I0,A)',ADVANCE='NO')tot_mesh%num_el,', '
+    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%vol_avg,', '
+    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%vol_sd,', '
+    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%skew_avg,', '
+    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%skew_sd,', '
+    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%ar_avg,', '
+    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%ar_sd,', '
     CLOSE(30)
   ENDSUBROUTINE output_statistics
 END MODULE out_stats

@@ -55,6 +55,12 @@ PROGRAM openmeshqualityanalyzer
       STOP "Mesh format not yet supported"
   ENDSELECT
 
+  !allocate the region mesh structures
+  minreg=MINVAL(tet(:)%reg)
+  maxreg=MAXVAL(tet(:)%reg)
+  ALLOCATE(reg_mesh(minreg:maxreg))
+  tot_mesh%num_el=tot_tets
+
   WRITE(*,'(A)')'----------------------- Calculating volumes:'
   CALL calcvols()
 

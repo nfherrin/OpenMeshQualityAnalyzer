@@ -7,7 +7,7 @@
 MODULE mesh_types
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: vertex_type,element_type_2d,element_type_3d
+  PUBLIC :: vertex_type, element_type_2d, element_type_3d, mesh_type_2d, mesh_type_3d
 
   !vertex pointer necessary to make array of pointers
   TYPE :: vert_ptr
@@ -68,39 +68,51 @@ MODULE mesh_types
     !mesh id (0 for total mesh)
     INTEGER :: id=0
     !number of elements
-    INTEGER :: num_el
+    INTEGER :: num_el=0
     !element average skew
-    REAL(8) :: skew_avg
+    REAL(8) :: skew_avg=0
     !element skew standard deviation
-    REAL(8) :: skew_sd
+    REAL(8) :: skew_sd=0
     !element average aspect ratio
-    REAL(8) :: ar_avg
+    REAL(8) :: ar_avg=0
     !element aspect ratio standard deviation
-    REAL(8) :: ar_sd
+    REAL(8) :: ar_sd=0
+  ENDTYPE
+
+  !tri pointer necessary to make array of pointers
+  TYPE :: tri_ptr
+    !actual pointer to the tri type
+    TYPE(element_type_2d), POINTER :: p
   ENDTYPE
 
   !the 2d mesh type
   TYPE, EXTENDS(base_mesh_type) :: mesh_type_2d
     !triangle elements in the mesh
-    TYPE(element_type_2d), POINTER :: tri(:)
+    TYPE(tri_ptr), ALLOCATABLE :: tri(:)
     !total area
-    REAL(8) :: area
+    REAL(8) :: area=0
     !average tri area
-    REAL(8) :: area_avg
+    REAL(8) :: area_avg=0
     !tri area standard deviation
-    REAL(8) :: area_sd
+    REAL(8) :: area_sd=0
+  ENDTYPE
+
+  !tet pointer necessary to make array of pointers
+  TYPE :: tet_ptr
+    !actual pointer to the tet type
+    TYPE(element_type_3d), POINTER :: p
   ENDTYPE
 
   !the 3d mesh type
   TYPE, EXTENDS(base_mesh_type) :: mesh_type_3d
     !tet elements in the mesh
-    TYPE(element_type_3d), POINTER :: tet(:)
+    TYPE(tet_ptr), ALLOCATABLE :: tet(:)
     !total volume
-    REAL(8) :: vol
+    REAL(8) :: vol=0
     !average tet volume
-    REAL(8) :: vol_avg
+    REAL(8) :: vol_avg=0
     !tet volume standard deviation
-    REAL(8) :: vol_sd
+    REAL(8) :: vol_sd=0
   ENDTYPE
 CONTAINS
 
