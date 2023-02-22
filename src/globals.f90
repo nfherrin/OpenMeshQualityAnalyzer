@@ -26,8 +26,8 @@ MODULE globals
   !progress bar counting
   INTEGER, PARAMETER :: max_prog=70
 
-  !vertex data (num_verts,3) locations of each vertex
-  REAL(8), ALLOCATABLE :: vertex(:,:)
+  !vertex data (num_verts) locations of each vertex
+  TYPE(vertex_type), ALLOCATABLE :: vertex(:)
 
   !element data (num_tets,4) indices of vertices of element
   INTEGER, ALLOCATABLE :: element(:,:)

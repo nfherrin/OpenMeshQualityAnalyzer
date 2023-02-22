@@ -131,7 +131,8 @@ CONTAINS
   !determine if a boundary side (in the cartesian directions) is flat
   SUBROUTINE det_side_flatness()
     INTEGER :: i,j,el_id,face_idx
-    REAL(8) :: face_point(3,3),ext_point(3),norm_vec(3),lambda,offset
+    TYPE(vertex_type) :: face_point(3),ext_point
+    REAL(8) :: norm_vec(3),lambda,offset,a(3),b(3)
 
     !sides are assumed to be flat, and if they are not this is set to false.
     side_flat=.TRUE.
@@ -142,16 +143,20 @@ CONTAINS
       DO j=1,4
         IF(bc_data(i,2) .NE. j-1)THEN
           face_idx=face_idx+1
-          face_point(face_idx,:)=vertex(element(el_id,j),:)
+          face_point(face_idx)=vertex(element(el_id,j))
         ELSE
-          ext_point(:)=vertex(element(el_id,j),:)
+          ext_point=vertex(element(el_id,j))
         ENDIF
       ENDDO
       !get the outward going unit normal vector for the tet for this face
-      norm_vec=cross(face_point(2,:)-face_point(1,:), face_point(3,:)-face_point(1,:))
-      offset=face_point(1,1)*norm_vec(1)+face_point(1,2)*norm_vec(2)+face_point(1,3)*norm_vec(3)
-      lambda=(offset-norm_vec(1)*ext_point(1)-norm_vec(2)*ext_point(2)-norm_vec(3)*ext_point(3)) &
-        /(norm_vec(1)**2+norm_vec(2)**2+norm_vec(3)**2)
+      a=(/face_point(2)%x-face_point(1)%x, face_point(2)%y-face_point(1)%y, &
+          face_point(2)%z-face_point(1)%z/)
+      b=(/face_point(3)%x-face_point(1)%x, face_point(3)%y-face_point(1)%y, &
+          face_point(3)%z-face_point(1)%z/)
+      norm_vec=cross(a, b)
+      offset=face_point(1)%x*norm_vec(1)+face_point(1)%y*norm_vec(2)+face_point(1)%z*norm_vec(3)
+      lambda=(offset-norm_vec(1)*ext_point%x-norm_vec(2)*ext_point%y-norm_vec(3)*ext_point%z) &
+          /(norm_vec(1)**2+norm_vec(2)**2+norm_vec(3)**2)
       norm_vec=norm_vec*lambda
       norm_vec=norm_vec/(SQRT(norm_vec(1)**2+norm_vec(2)**2+norm_vec(3)**2))
 

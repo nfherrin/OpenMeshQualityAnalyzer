@@ -61,8 +61,10 @@ CONTAINS
     !get the nodes info
     READ(20,*)num_entities,num_verts,minnode,maxnode
     IF(minnode .NE. 1 .OR. maxnode .NE. num_verts)STOP 'nodes should be indexed 1 to amount'
-    ALLOCATE(vertex(num_verts,3))
-    vertex=0.0
+    ALLOCATE(vertex(num_verts))
+    vertex(:)%x=0
+    vertex(:)%y=0
+    vertex(:)%z=0
     !read in all node data
     node_indx=1
     DO i=1,num_entities
@@ -73,7 +75,8 @@ CONTAINS
       ENDDO
       !read in the node datas
       DO j=1,loc_num_nodes
-        READ(20,*)vertex(node_indx,:)
+        READ(20,*)vertex(node_indx)%x,vertex(node_indx)%y,vertex(node_indx)%z
+        vertex(node_indx)%id=node_indx
         node_indx=node_indx+1
       ENDDO
     ENDDO

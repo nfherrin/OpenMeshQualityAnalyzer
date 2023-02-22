@@ -19,7 +19,7 @@ CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE calcvols()
-    REAL(8) :: a(3),b(3),c(3),d(3)
+    TYPE(vertex_type) :: a,b,c,d
     INTEGER :: i
 
     WRITE(*,'(A)',ADVANCE='NO')'Progress:'
@@ -36,13 +36,13 @@ CONTAINS
 
     !compute tet volumes and add to both total volumes and region volumes
     DO i=1,num_tets
-      a(:)=vertex(element(i,1),:)
-      b(:)=vertex(element(i,2),:)
-      c(:)=vertex(element(i,3),:)
-      d(:)=vertex(element(i,4),:)
-      tetvol(i)=ABS((-c(2)*d(1)+b(2)*(-c(1)+d(1))+b(1)*(c(2)-d(2))+c(1)*d(2))*(a(3)-d(3))+(a(1)-d(1)) &
-          *(-c(3)*d(2)+b(3)*(-c(2)+d(2))+b(2)*(c(3)-d(3))+c(2)*d(3))+(a(2)-d(2))*(b(3)*(c(1)-d(1)) &
-          +c(3)*d(1)-c(1)*d(3)+b(1)*(-c(3)+d(3))))/6
+      a=vertex(element(i,1))
+      b=vertex(element(i,2))
+      c=vertex(element(i,3))
+      d=vertex(element(i,4))
+      tetvol(i)=ABS((-c%y*d%x+b%y*(-c%x+d%x)+b%x*(c%y-d%y)+c%x*d%y)*(a%z-d%z)+(a%x-d%x) &
+          *(-c%z*d%y+b%z*(-c%y+d%y)+b%y*(c%z-d%z)+c%y*d%z)+(a%y-d%y)*(b%z*(c%x-d%x) &
+          +c%z*d%x-c%x*d%z+b%x*(-c%z+d%z)))/6
       reg_vol(el_tag(i))=reg_vol(el_tag(i))+tetvol(i)
       tets_in_reg(el_tag(i))=tets_in_reg(el_tag(i))+1
       tot_vol=tot_vol+tetvol(i)
@@ -99,8 +99,8 @@ CONTAINS
     !compute tet skews
     DO i=1,num_tets
       !compute the side of the regular tet in the circumsphere of the tet
-      a_side=4.0D0*sphere_rad(vertex(element(i,1),:),vertex(element(i,2),:),vertex(element(i,3),:), &
-          vertex(element(i,4),:))/SQRT(6.0D0)
+      a_side=4.0D0*sphere_rad(vertex(element(i,1)),vertex(element(i,2)),vertex(element(i,3)), &
+          vertex(element(i,4)))/SQRT(6.0D0)
       !compute the volume of the regular tet in the circumsphere of the tet
       vol_reg=a_side**3/(6.0D0*SQRT(2.0D0))
       !compute the cell skew
@@ -160,12 +160,12 @@ CONTAINS
       DO i=1,num_tets
         !compute the length of each of the six sides
         llen=0
-        llen(1)=line_length(vertex(element(i,1),:),vertex(element(i,2),:))
-        llen(2)=line_length(vertex(element(i,1),:),vertex(element(i,3),:))
-        llen(3)=line_length(vertex(element(i,1),:),vertex(element(i,4),:))
-        llen(4)=line_length(vertex(element(i,2),:),vertex(element(i,3),:))
-        llen(5)=line_length(vertex(element(i,2),:),vertex(element(i,4),:))
-        llen(6)=line_length(vertex(element(i,3),:),vertex(element(i,4),:))
+        llen(1)=line_length(vertex(element(i,1)),vertex(element(i,2)))
+        llen(2)=line_length(vertex(element(i,1)),vertex(element(i,3)))
+        llen(3)=line_length(vertex(element(i,1)),vertex(element(i,4)))
+        llen(4)=line_length(vertex(element(i,2)),vertex(element(i,3)))
+        llen(5)=line_length(vertex(element(i,2)),vertex(element(i,4)))
+        llen(6)=line_length(vertex(element(i,3)),vertex(element(i,4)))
         !compute the cell ar
         cell_ar(i)=MAXVAL(llen)/MINVAL(llen)
 
@@ -204,7 +204,7 @@ CONTAINS
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     REAL(8) FUNCTION sphere_rad(a,b,c,d)
-      REAL(8), INTENT(IN) :: a(3),c(3),b(3),d(3)
+      TYPE(vertex_type), INTENT(IN) :: a,c,b,d
 
       REAL(8) :: ba(3),ca(3),da(3)
       REAL(8) :: len_ba,len_ca,len_da
@@ -212,17 +212,17 @@ CONTAINS
       REAL(8) :: denominator
       REAL(8) :: circ(3)
 
-      ba(1)=b(1)-a(1)
-      ba(2)=b(2)-a(2)
-      ba(3)=b(3)-a(3)
+      ba(1)=b%x-a%x
+      ba(2)=b%y-a%y
+      ba(3)=b%z-a%z
 
-      ca(1)=c(1)-a(1)
-      ca(2)=c(2)-a(2)
-      ca(3)=c(3)-a(3)
+      ca(1)=c%x-a%x
+      ca(2)=c%y-a%y
+      ca(3)=c%z-a%z
 
-      da(1)=d(1)-a(1)
-      da(2)=d(2)-a(2)
-      da(3)=d(3)-a(3)
+      da(1)=d%x-a%x
+      da(2)=d%y-a%y
+      da(3)=d%z-a%z
 
       len_ba=ba(1)*ba(1)+ba(2)*ba(2)+ba(3)*ba(3);
       len_ca=ca(1)*ca(1)+ca(2)*ca(2)+ca(3)*ca(3);
@@ -251,12 +251,12 @@ CONTAINS
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !computes the circumsphere radius for a given tet
+      !computes the length of the line between two vertices
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       REAL(8) FUNCTION line_length(a,b)
-        REAL(8), INTENT(IN) :: a(3),b(3)
+        TYPE(vertex_type), INTENT(IN) :: a,b
 
-        line_length=SQRT((a(1)-b(1))**2+(a(2)-b(2))**2+(a(3)-b(3))**2)
+        line_length=SQRT((a%x-b%x)**2+(a%y-b%y)**2+(a%z-b%z)**2)
       ENDFUNCTION line_length
 END MODULE mesh_analyze

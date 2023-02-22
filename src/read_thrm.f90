@@ -28,9 +28,10 @@ CONTAINS
     READ(20,*)
 
     !read in the vertices
-    ALLOCATE(vertex(num_verts,3))
+    ALLOCATE(vertex(num_verts))
     DO i=1,num_verts
-      READ(20,*)temp_int,vertex(i,:)
+      READ(20,*)temp_int,vertex(i)%x,vertex(i)%y,vertex(i)%z
+      vertex(i)%id=temp_int
       IF(i .NE. temp_int)STOP 'thrm vertices disordered'
     ENDDO
 
