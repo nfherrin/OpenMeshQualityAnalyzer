@@ -17,7 +17,7 @@ CONTAINS
 
     OPEN(UNIT=30,FILE=TRIM(ADJUSTL(mesh_infile))//'_stats.csv',ACTION='WRITE',STATUS='REPLACE')
 
-    WRITE(30,'(A)')"Region, Vol, Tets, Avg Tet Vol, Tet Vol SD, Avg Skew, Skew SD, Avg AR, AR SD"
+    WRITE(30,'(A)')"Region, Vol, Tets, Avg Tet Vol, Tet Vol SD, Avg Skew, Skew SD, Avg AR, AR SD,"
 
     DO i=minreg,maxreg
       WRITE(30,'(I0,A)',ADVANCE='NO')i,', '
