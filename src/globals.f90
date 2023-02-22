@@ -27,13 +27,10 @@ MODULE globals
   INTEGER, PARAMETER :: max_prog=70
 
   !vertex data (num_verts) locations of each vertex
-  TYPE(vertex_type), ALLOCATABLE :: vertex(:)
+  TYPE(vertex_type), TARGET, ALLOCATABLE :: vertex(:)
 
   !element data (num_tets,4) indices of vertices of element
-  INTEGER, ALLOCATABLE :: element(:,:)
-
-  !element region tags (num_tets)
-  INTEGER, ALLOCATABLE :: el_tag(:)
+  TYPE(element_type_3d), ALLOCATABLE :: tet(:)
 
   !adjacency list (num_tets*4,4) first column is one element id, second column is that element's face, third column is other element id, fourth column is that other element's face
   !last two columns are zero for boundaries

@@ -7,6 +7,12 @@
 MODULE mesh_types
   IMPLICIT NONE
 
+  !vertex pointer necessary to make array of pointers
+  TYPE :: vert_ptr
+    !actual pointer to the vertex type
+    TYPE(vertex_type), POINTER :: p
+  ENDTYPE
+
   !the vertex type
   TYPE :: vertex_type
     !location for x,y,z
@@ -32,7 +38,7 @@ MODULE mesh_types
   !the specific 2d element type
   TYPE, EXTENDS(base_element_type) :: element_type_2d
     !3 corners of the triangle
-    TYPE(vertex_type), POINTER :: corner(:)
+    TYPE(vert_ptr) :: corner(3)
     !area of the triangle
     REAL(8) :: area=0
   ENDTYPE
@@ -40,7 +46,7 @@ MODULE mesh_types
   !the specific 3d element type
   TYPE, EXTENDS(base_element_type) :: element_type_3d
     !4 corners of the tet
-    TYPE(vertex_type), POINTER :: corner(:)
+    TYPE(vert_ptr) :: corner(4)
     !volume of the tet
     REAL(8) :: vol=0
   ENDTYPE

@@ -120,12 +120,13 @@ CONTAINS
       ENDIF
     ENDDO
     !allocate elements and element tags
-    ALLOCATE(element(num_tets,4),el_tag(num_tets))
-    element=0
-    el_tag=0
+    ALLOCATE(tet(num_tets))
     DO i=1,num_tets
-      element(i,:)=temp_array(i,1:4)
-      el_tag(i)=temp_array(i,5)
+      DO j=1,4
+        tet(i)%corner(j)%p => vertex(temp_array(i,j))
+      ENDDO
+      tet(i)%reg=temp_array(i,5)
+      tet(i)%id=i
     ENDDO
     DEALLOCATE(temp_array)
     DO i=prog,max_prog

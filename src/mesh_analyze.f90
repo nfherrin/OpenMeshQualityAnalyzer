@@ -24,8 +24,9 @@ CONTAINS
 
     WRITE(*,'(A)',ADVANCE='NO')'Progress:'
 
-    minreg=MINVAL(el_tag(:))
-    maxreg=MAXVAL(el_tag(:))
+    minreg=MINVAL(tet(:)%reg)
+    maxreg=MAXVAL(tet(:)%reg)
+    write(*,*)'minreg,maxreg',minreg,maxreg
     ALLOCATE(tetvol(num_tets),reg_vol(minreg:maxreg),tets_in_reg(minreg:maxreg),&
         reg_vol_sd(minreg:maxreg))
     tets_in_reg=0
@@ -36,15 +37,15 @@ CONTAINS
 
     !compute tet volumes and add to both total volumes and region volumes
     DO i=1,num_tets
-      a=vertex(element(i,1))
-      b=vertex(element(i,2))
-      c=vertex(element(i,3))
-      d=vertex(element(i,4))
+      a=tet(i)%corner(1)%p
+      b=tet(i)%corner(2)%p
+      c=tet(i)%corner(3)%p
+      d=tet(i)%corner(4)%p
       tetvol(i)=ABS((-c%y*d%x+b%y*(-c%x+d%x)+b%x*(c%y-d%y)+c%x*d%y)*(a%z-d%z)+(a%x-d%x) &
           *(-c%z*d%y+b%z*(-c%y+d%y)+b%y*(c%z-d%z)+c%y*d%z)+(a%y-d%y)*(b%z*(c%x-d%x) &
           +c%z*d%x-c%x*d%z+b%x*(-c%z+d%z)))/6
-      reg_vol(el_tag(i))=reg_vol(el_tag(i))+tetvol(i)
-      tets_in_reg(el_tag(i))=tets_in_reg(el_tag(i))+1
+      reg_vol(tet(i)%reg)=reg_vol(tet(i)%reg)+tetvol(i)
+      tets_in_reg(tet(i)%reg)=tets_in_reg(tet(i)%reg)+1
       tot_vol=tot_vol+tetvol(i)
       IF(MOD(i,CEILING(num_tets*1.0D0/(max_prog-1.0D0))) .EQ. 0)THEN
         WRITE(*,'(A)',ADVANCE='NO')'*'
@@ -57,9 +58,9 @@ CONTAINS
     reg_vol_sd=0.0
     DO i=1,num_tets
       tot_vol_sd=tot_vol_sd+(tetvol(i)-tot_vol/(num_tets*1.0D0))**2
-      IF(tets_in_reg(el_tag(i)) .NE. 0)THEN
-        reg_vol_sd(el_tag(i))=reg_vol_sd(el_tag(i))+ &
-            (tetvol(i)-reg_vol(el_tag(i))/(tets_in_reg(el_tag(i))*1.0D0))**2
+      IF(tets_in_reg(tet(i)%reg) .NE. 0)THEN
+        reg_vol_sd(tet(i)%reg)=reg_vol_sd(tet(i)%reg)+ &
+            (tetvol(i)-reg_vol(tet(i)%reg)/(tets_in_reg(tet(i)%reg)*1.0D0))**2
       ENDIF
     ENDDO
     tot_vol_sd=SQRT(tot_vol_sd/(num_tets-1.0D0))
@@ -99,8 +100,8 @@ CONTAINS
     !compute tet skews
     DO i=1,num_tets
       !compute the side of the regular tet in the circumsphere of the tet
-      a_side=4.0D0*sphere_rad(vertex(element(i,1)),vertex(element(i,2)),vertex(element(i,3)), &
-          vertex(element(i,4)))/SQRT(6.0D0)
+      a_side=4.0D0*sphere_rad(tet(i)%corner(1)%p,tet(i)%corner(2)%p,tet(i)%corner(3)%p, &
+          tet(i)%corner(4)%p)/SQRT(6.0D0)
       !compute the volume of the regular tet in the circumsphere of the tet
       vol_reg=a_side**3/(6.0D0*SQRT(2.0D0))
       !compute the cell skew
@@ -108,7 +109,7 @@ CONTAINS
 
       !cell skew average
       tot_avg_skew=tot_avg_skew+cell_skew(i)
-      reg_avg_skew(el_tag(i))=reg_avg_skew(el_tag(i))+cell_skew(i)
+      reg_avg_skew(tet(i)%reg)=reg_avg_skew(tet(i)%reg)+cell_skew(i)
       IF(MOD(i,CEILING(num_tets*1.0D0/(max_prog-1.0D0))) .EQ. 0)THEN
         WRITE(*,'(A)',ADVANCE='NO')'*'
         prog=prog+1
@@ -122,7 +123,7 @@ CONTAINS
     !compute skew standard deviation
     DO i=1,num_tets
       tot_sd_skew=tot_sd_skew+(cell_skew(i)-tot_avg_skew)**2
-      reg_sd_skew(el_tag(i))=reg_sd_skew(el_tag(i))+(cell_skew(i)-reg_avg_skew(el_tag(i)))**2
+      reg_sd_skew(tet(i)%reg)=reg_sd_skew(tet(i)%reg)+(cell_skew(i)-reg_avg_skew(tet(i)%reg))**2
     ENDDO
     tot_sd_skew=SQRT(tot_sd_skew/(num_tets-1.0D0))
     DO i=minreg,maxreg
@@ -160,18 +161,18 @@ CONTAINS
       DO i=1,num_tets
         !compute the length of each of the six sides
         llen=0
-        llen(1)=line_length(vertex(element(i,1)),vertex(element(i,2)))
-        llen(2)=line_length(vertex(element(i,1)),vertex(element(i,3)))
-        llen(3)=line_length(vertex(element(i,1)),vertex(element(i,4)))
-        llen(4)=line_length(vertex(element(i,2)),vertex(element(i,3)))
-        llen(5)=line_length(vertex(element(i,2)),vertex(element(i,4)))
-        llen(6)=line_length(vertex(element(i,3)),vertex(element(i,4)))
+        llen(1)=line_length(tet(i)%corner(1)%p,tet(i)%corner(2)%p)
+        llen(2)=line_length(tet(i)%corner(1)%p,tet(i)%corner(3)%p)
+        llen(3)=line_length(tet(i)%corner(1)%p,tet(i)%corner(4)%p)
+        llen(4)=line_length(tet(i)%corner(2)%p,tet(i)%corner(3)%p)
+        llen(5)=line_length(tet(i)%corner(2)%p,tet(i)%corner(4)%p)
+        llen(6)=line_length(tet(i)%corner(3)%p,tet(i)%corner(4)%p)
         !compute the cell ar
         cell_ar(i)=MAXVAL(llen)/MINVAL(llen)
 
         !cell ar average
         tot_avg_ar=tot_avg_ar+cell_ar(i)
-        reg_avg_ar(el_tag(i))=reg_avg_ar(el_tag(i))+cell_ar(i)
+        reg_avg_ar(tet(i)%reg)=reg_avg_ar(tet(i)%reg)+cell_ar(i)
         IF(MOD(i,CEILING(num_tets*1.0D0/(max_prog-1.0D0))) .EQ. 0)THEN
           WRITE(*,'(A)',ADVANCE='NO')'*'
           prog=prog+1
@@ -185,7 +186,7 @@ CONTAINS
       !compute ar standard deviation
       DO i=1,num_tets
         tot_sd_ar=tot_sd_ar+(cell_ar(i)-tot_avg_ar)**2
-        reg_sd_ar(el_tag(i))=reg_sd_ar(el_tag(i))+(cell_ar(i)-reg_avg_ar(el_tag(i)))**2
+        reg_sd_ar(tet(i)%reg)=reg_sd_ar(tet(i)%reg)+(cell_ar(i)-reg_avg_ar(tet(i)%reg))**2
       ENDDO
       tot_sd_ar=SQRT(tot_sd_ar/(num_tets-1.0D0))
       DO i=minreg,maxreg

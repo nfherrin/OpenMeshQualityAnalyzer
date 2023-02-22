@@ -15,9 +15,9 @@ CONTAINS
   !reads in a gmsh file
   SUBROUTINE read_thrm_file()
     !counting variables
-    INTEGER :: i
+    INTEGER :: i,j
     !temporary variables
-    INTEGER :: temp_int
+    INTEGER :: temp_int,el_vec(4)
 
     OPEN(unit=20,FILE=mesh_infile,ACTION='READ',STATUS='OLD')
 
@@ -36,16 +36,19 @@ CONTAINS
     ENDDO
 
     !read in the element tags
-    ALLOCATE(el_tag(num_tets))
+    ALLOCATE(tet(num_tets))
     DO i=1,num_tets
-      READ(20,*)temp_int,el_tag(i)
+      READ(20,*)temp_int,tet(i)%reg
+      tet(i)%id=temp_int
       IF(i .NE. temp_int)STOP 'thrm element tags disordered'
     ENDDO
 
-    !read in the tet compisition (data/vertices)
-    ALLOCATE(element(num_tets,4))
+    !read in the tet composition (data/vertices)
     DO i=1,num_tets
-      READ(20,*)temp_int,element(i,:)
+      READ(20,*)temp_int,el_vec(:)
+      DO j=1,4
+        tet(i)%corner(j)%p => vertex(el_vec(j))
+      ENDDO
       IF(i .NE. temp_int)STOP 'thrm element compositions disordered'
     ENDDO
 
