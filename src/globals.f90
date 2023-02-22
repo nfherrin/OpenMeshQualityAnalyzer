@@ -30,7 +30,7 @@ MODULE globals
   TYPE(vertex_type), TARGET, ALLOCATABLE :: vertex(:)
 
   !element data (tot_tets) indices of vertices of element
-  TYPE(element_type_3d), ALLOCATABLE :: tet(:)
+  TYPE(element_type_3d), TARGET, ALLOCATABLE :: tet(:)
 
   !boundary conditions data. (num_bcf,2) first data column is element id and second data column is face id
   INTEGER, ALLOCATABLE :: bc_data(:,:)

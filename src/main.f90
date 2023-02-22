@@ -9,11 +9,12 @@ PROGRAM openmeshqualityanalyzer
   USE out_stats
   USE read_thrm
   USE mesh_analyze
+  USE tet_analyze
   USE boundary_conditions
   IMPLICIT NONE
 
   !> The number of provided command line arguments
-  INTEGER :: arg_count
+  INTEGER :: arg_count,i
 
   !type of mesh format
   CHARACTER(20) :: mesh_format="",tchar1,tchar2
@@ -55,20 +56,26 @@ PROGRAM openmeshqualityanalyzer
       STOP "Mesh format not yet supported"
   ENDSELECT
 
-  !allocate the region mesh structures
-  minreg=MINVAL(tet(:)%reg)
-  maxreg=MAXVAL(tet(:)%reg)
-  ALLOCATE(reg_mesh(minreg:maxreg))
-  tot_mesh%num_el=tot_tets
+  !assign tets to each volume
+  CALL assign_tets()
 
   WRITE(*,'(A)')'----------------------- Calculating volumes:'
-  CALL calcvols()
+  CALL calc_tet_vols()
+  CALL mesh_vol_analysis(tot_mesh)
+  DO i=minreg,maxreg
+    CALL mesh_vol_analysis(reg_mesh(i))
+  ENDDO
+  !finish up progress bar
+  DO i=prog,max_prog
+    WRITE(*,'(A)',ADVANCE='NO')'*'
+  ENDDO
+  WRITE(*,*)
 
   WRITE(*,'(A)')'----------------------- Computing mesh skewness:'
-  CALL comp_skew()
+  CALL comp_tet_skew()
 
   WRITE(*,'(A)')'----------------------- Computing mesh aspect ratio:'
-  CALL comp_ar()
+  CALL comp_tet_ar()
 
   WRITE(*,'(A)')'---------------------- Outputting results to '//TRIM(ADJUSTL(mesh_infile))//&
       '_stats.csv'
