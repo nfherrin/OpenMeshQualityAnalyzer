@@ -206,7 +206,7 @@ CONTAINS
     INTEGER, INTENT(IN) :: verts(4)
     INTEGER :: i,temp_vert,changes
     orderedverts=verts
-    !bubble sort algorithm, pretty cheap for only 4 elements
+    !bubble sort algorithm, pretty cheap for only 4 points
     DO
       changes=0
       DO i=1,3
