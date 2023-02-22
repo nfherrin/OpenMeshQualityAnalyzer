@@ -64,7 +64,8 @@ PROGRAM openmeshqualityanalyzer
   WRITE(*,'(A)')'----------------------- Computing mesh aspect ratio:'
   CALL comp_ar()
 
-  WRITE(*,'(A)')'---------------------- Outputting results to '//TRIM(ADJUSTL(mesh_infile))//'_stats.csv'
+  WRITE(*,'(A)')'---------------------- Outputting results to '//TRIM(ADJUSTL(mesh_infile))//&
+      '_stats.csv'
   CALL output_statistics()
   WRITE(*,'(A)')'--------------------------------------------------------------------------------'
   WRITE(*,'(A)')'--------------------------------------------------------------------------------'

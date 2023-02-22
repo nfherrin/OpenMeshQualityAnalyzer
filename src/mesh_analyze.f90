@@ -23,7 +23,6 @@ CONTAINS
 
     minreg=MINVAL(tet(:)%reg)
     maxreg=MAXVAL(tet(:)%reg)
-    write(*,*)'minreg,maxreg',minreg,maxreg
     ALLOCATE(reg_vol(minreg:maxreg),tets_in_reg(minreg:maxreg),&
         reg_vol_sd(minreg:maxreg))
     tets_in_reg=0

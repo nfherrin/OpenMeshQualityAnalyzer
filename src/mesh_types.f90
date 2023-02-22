@@ -54,6 +54,10 @@ MODULE mesh_types
     TYPE(vert_ptr) :: corner(4)
     !volume of the tet
     REAL(8) :: vol=0
+    !Adjacent tet id for faces 1 to 4
+    INTEGER :: adj_id(4)=0
+    !Adjacent tet face for faces 1 to 4
+    INTEGER :: adj_face(4)=0
     CONTAINS
       !compute the circumsphere radius
       PROCEDURE :: sphere_rad

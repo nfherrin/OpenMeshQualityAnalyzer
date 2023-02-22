@@ -22,8 +22,7 @@ CONTAINS
       CALL orderverts(tet(i))
     ENDDO
 
-    ALLOCATE(adj_list(num_tets*4,4),tbound_cond(num_tets*4,2))
-    adj_list=0
+    ALLOCATE(tbound_cond(num_tets*4,2))
     tbound_cond=0
     !loop over all tets
     adj_idx=0
@@ -95,10 +94,8 @@ CONTAINS
     IF(j .EQ. num_tets+1)THEN
       !we didn't find a matching face so it's a boundary condition
       adj_idx=adj_idx+1
-      adj_list(adj_idx,1)=el_idx
-      adj_list(adj_idx,2)=faceid
-      adj_list(adj_idx,3)=0
-      adj_list(adj_idx,4)=0
+      tet(el_idx)%adj_id(faceid+1)=0
+      tet(el_idx)%adj_face(faceid+1)=0
       num_bcf=num_bcf+1
       tbound_cond(num_bcf,1)=el_idx
       tbound_cond(num_bcf,2)=faceid
@@ -120,10 +117,8 @@ CONTAINS
     IF(face1(1) .EQ. face2(1) .AND. face1(2) .EQ. face2(2) &
         .AND. face1(3) .EQ. face2(3) .AND. el_idx1 .NE. el_idx2)THEN
       adj_idx=adj_idx+1
-      adj_list(adj_idx,1)=el_idx1
-      adj_list(adj_idx,2)=faceid1
-      adj_list(adj_idx,3)=el_idx2
-      adj_list(adj_idx,4)=faceid2
+      tet(el_idx1)%adj_id(faceid1+1)=el_idx2
+      tet(el_idx1)%adj_face(faceid1+1)=faceid2+1
       match=.TRUE.
     ENDIF
   ENDSUBROUTINE check_face

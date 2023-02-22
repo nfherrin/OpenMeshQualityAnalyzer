@@ -32,10 +32,6 @@ MODULE globals
   !element data (num_tets,4) indices of vertices of element
   TYPE(element_type_3d), ALLOCATABLE :: tet(:)
 
-  !adjacency list (num_tets*4,4) first column is one element id, second column is that element's face, third column is other element id, fourth column is that other element's face
-  !last two columns are zero for boundaries
-  INTEGER, ALLOCATABLE :: adj_list(:,:)
-
   !boundary conditions data. (num_bcf,2) first data column is element id and second data column is face id
   INTEGER, ALLOCATABLE :: bc_data(:,:)
 

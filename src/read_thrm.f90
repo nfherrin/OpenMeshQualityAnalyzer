@@ -17,7 +17,7 @@ CONTAINS
     !counting variables
     INTEGER :: i,j
     !temporary variables
-    INTEGER :: temp_int,el_vec(4)
+    INTEGER :: temp_int,el_vec(4),ti2
 
     OPEN(unit=20,FILE=mesh_infile,ACTION='READ',STATUS='OLD')
 
@@ -61,19 +61,36 @@ CONTAINS
 
     !read in the adjancency data
     WRITE(*,'(A)',ADVANCE='NO')'Progress:'
-    prog=0
-    WRITE(*,'(A)',ADVANCE='NO')'**'
+    prog=1
     READ(20,*)
-    ALLOCATE(adj_list(num_tets*4,4))
-    DO i=1,num_tets*4
-      READ(20,*)adj_list(i,:)
+    DO i=1,num_tets
+      !loop over for a single tet
+      DO j=1,4
+        READ(20,*)temp_int,ti2,tet(i)%adj_id(j),tet(i)%adj_face(j)
+        IF(i .NE. temp_int)STOP 'thrm adjacencies disordered'
+        IF(j-1 .NE. ti2)STOP 'thrm adjacencies disordered'
+      ENDDO
       IF(MOD(i,CEILING(num_tets*4*1.0/(max_prog-1.0))) .EQ. 0)THEN
         WRITE(*,'(A)',ADVANCE='NO')'*'
         prog=prog+1
       ENDIF
     ENDDO
+    !adjust face id to be indexed 1 to 4
+    !also check to make sure that all boundary condition faces are defined as zero
+    DO i=1,num_tets
+      DO j=1,4
+        IF(tet(i)%adj_id(j) .NE. 0)THEN
+          tet(i)%adj_face(j)=tet(i)%adj_face(j)+1
+        ELSE
+          IF(tet(i)%adj_face(j) .NE. 0)STOP 'boundary conditions should have faces defined as zero'
+        ENDIF
+      ENDDO
+    ENDDO
 
     CLOSE(20)
+    DO i=prog,max_prog
+      WRITE(*,'(A)',ADVANCE='NO')'*'
+    ENDDO
     WRITE(*,'(A)')'*'
   ENDSUBROUTINE read_thrm_file
 END MODULE read_thrm
