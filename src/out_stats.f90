@@ -17,7 +17,8 @@ CONTAINS
 
     OPEN(UNIT=30,FILE=TRIM(ADJUSTL(mesh_infile))//'_stats.csv',ACTION='WRITE',STATUS='REPLACE')
 
-    WRITE(30,'(A)')"Region, Vol, Tets, Avg Tet Vol, Tet Vol SD, Avg Skew, Skew SD, Avg AR, AR SD,"
+    WRITE(30,'(A)')"Region, Vol, Tets, Avg Tet Vol, Tet Vol SD, Avg Skew, Skew SD, Avg AR, AR SD, &
+        &Avg Smooth, Smooth SD,"
 
     DO i=minreg,maxreg
       IF(reg_mesh(i)%num_el .GT. 0)THEN
@@ -30,6 +31,8 @@ CONTAINS
         WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%skew_sd,', '
         WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%ar_avg,', '
         WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%ar_sd,', '
+        WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%smooth_avg,', '
+        WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%smooth_sd,', '
         WRITE(30,*)
       ENDIF
     ENDDO
@@ -42,6 +45,8 @@ CONTAINS
     WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%skew_sd,', '
     WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%ar_avg,', '
     WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%ar_sd,', '
+    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%smooth_avg,', '
+    WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%smooth_sd,', '
     CLOSE(30)
   ENDSUBROUTINE output_statistics
 END MODULE out_stats

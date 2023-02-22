@@ -98,6 +98,19 @@ PROGRAM openmeshqualityanalyzer
   ENDDO
   WRITE(*,*)
 
+  WRITE(*,'(A)')'----------------------- Computing mesh smoothness:'
+  CALL comp_tet_smooth()
+  !for each mesh structure
+  CALL mesh_smooth_analysis(tot_mesh)
+  DO i=minreg,maxreg
+    IF(reg_mesh(i)%num_el .GT. 0)CALL mesh_smooth_analysis(reg_mesh(i))
+  ENDDO
+  !finish up progress bar
+  DO i=prog,max_prog
+    WRITE(*,'(A)',ADVANCE='NO')'*'
+  ENDDO
+  WRITE(*,*)
+
   WRITE(*,'(A)')'---------------------- Outputting results to '//TRIM(ADJUSTL(mesh_infile))//&
       '_stats.csv'
   CALL output_statistics()

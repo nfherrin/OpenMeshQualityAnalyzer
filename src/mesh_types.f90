@@ -38,6 +38,8 @@ MODULE mesh_types
     REAL(8) :: skew=0
     !aspect ratio of the element
     REAL(8) :: aspect_ratio=0
+    !smoothness of the elements (volume/area compared to surrounding elements)
+    REAL(8) :: smoothness
   ENDTYPE
 
   !the specific 2d element type
@@ -77,6 +79,10 @@ MODULE mesh_types
     REAL(8) :: ar_avg=0
     !element aspect ratio standard deviation
     REAL(8) :: ar_sd=0
+    !average smoothness of elements
+    REAL(8) :: smooth_avg=0
+    !average smoothness of elements
+    REAL(8) :: smooth_sd=0
   ENDTYPE
 
   !tri pointer necessary to make array of pointers

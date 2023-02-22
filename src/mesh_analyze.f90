@@ -7,7 +7,7 @@ MODULE mesh_analyze
   USE globals
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: assign_tets,mesh_vol_analysis,mesh_skew_analysis,mesh_ar_analysis
+  PUBLIC :: assign_tets,mesh_vol_analysis,mesh_skew_analysis,mesh_ar_analysis,mesh_smooth_analysis
 CONTAINS
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -16,8 +16,8 @@ CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE assign_tets()
-    INTEGER :: i
     INTEGER, ALLOCATABLE :: reg_tet_id(:)
+    INTEGER :: i
 
     !allocate the region mesh structures
     minreg=MINVAL(tet(:)%reg)
@@ -48,8 +48,8 @@ CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE mesh_vol_analysis(this_mesh)
-    INTEGER :: i
     TYPE(mesh_type_3d), INTENT(INOUT) :: this_mesh
+    INTEGER :: i
     this_mesh%vol=0
     DO i=1,this_mesh%num_el
       this_mesh%vol=this_mesh%vol+this_mesh%tet(i)%p%vol
@@ -69,8 +69,8 @@ CONTAINS
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     SUBROUTINE mesh_skew_analysis(this_mesh)
-      INTEGER :: i
       TYPE(mesh_type_3d), INTENT(INOUT) :: this_mesh
+      INTEGER :: i
       this_mesh%skew_avg=0
       DO i=1,this_mesh%num_el
         this_mesh%skew_avg=this_mesh%skew_avg+this_mesh%tet(i)%p%skew
@@ -90,8 +90,8 @@ CONTAINS
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       SUBROUTINE mesh_ar_analysis(this_mesh)
-        INTEGER :: i
         TYPE(mesh_type_3d), INTENT(INOUT) :: this_mesh
+        INTEGER :: i
         this_mesh%ar_avg=0
         DO i=1,this_mesh%num_el
           this_mesh%ar_avg=this_mesh%ar_avg+this_mesh%tet(i)%p%aspect_ratio
@@ -104,4 +104,26 @@ CONTAINS
         ENDDO
         this_mesh%ar_sd=SQRT(this_mesh%ar_sd/(this_mesh%num_el-1.0D0))
       ENDSUBROUTINE mesh_ar_analysis
+
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !smoothness analysis of a mesh
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        SUBROUTINE mesh_smooth_analysis(this_mesh)
+          TYPE(mesh_type_3d), INTENT(INOUT) :: this_mesh
+          INTEGER :: i
+          this_mesh%smooth_avg=0
+          DO i=1,this_mesh%num_el
+            this_mesh%smooth_avg=this_mesh%smooth_avg+this_mesh%tet(i)%p%smoothness
+          ENDDO
+          this_mesh%smooth_avg=this_mesh%smooth_avg/(this_mesh%num_el*1.0D0)
+
+          this_mesh%smooth_sd=0
+          DO i=1,this_mesh%num_el
+            this_mesh%smooth_sd=this_mesh%smooth_sd+(this_mesh%tet(i)%p%smoothness&
+                -this_mesh%smooth_avg)**2
+          ENDDO
+          this_mesh%smooth_sd=SQRT(this_mesh%smooth_sd/(this_mesh%num_el-1.0D0))
+        ENDSUBROUTINE mesh_smooth_analysis
 END MODULE mesh_analyze

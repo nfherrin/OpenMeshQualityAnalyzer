@@ -7,7 +7,7 @@ MODULE tet_analyze
   USE globals
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: calc_tet_vols,comp_tet_skew,comp_tet_ar
+  PUBLIC :: calc_tet_vols,comp_tet_skew,comp_tet_ar,comp_tet_smooth
 CONTAINS
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -105,4 +105,42 @@ CONTAINS
         ENDIF
       ENDDO
     ENDSUBROUTINE comp_tet_ar
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !calculate the smoothness of a given tet (volume compared to surrounding tets)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      SUBROUTINE comp_tet_smooth()
+        INTEGER :: i,j,adj_i
+        REAL(8) :: num_adj_tets
+
+        WRITE(*,'(A)',ADVANCE='NO')'Progress:'
+        prog=0
+
+        DO i=1,tot_tets
+          num_adj_tets=0
+          tet(i)%smoothness=0
+          !compute summed smoothness related to adjacent cells
+          DO j=1,4
+            adj_i=tet(i)%adj_id(j)
+            IF(adj_i .NE. 0)THEN
+              num_adj_tets=num_adj_tets+1.0
+              !add to smoothness sum, which is larger volume divided by smaller volume
+              IF(tet(adj_i)%vol .GE. tet(i)%vol)THEN
+                tet(i)%smoothness=tet(i)%smoothness+tet(adj_i)%vol/tet(i)%vol
+              ELSE
+                tet(i)%smoothness=tet(i)%smoothness+tet(i)%vol/tet(adj_i)%vol
+              ENDIF
+            ENDIF
+          ENDDO
+          IF(tet(i)%smoothness .LE. 0)STOP 'tet cannot be solo!'
+          !average smoothness
+          tet(i)%smoothness=tet(i)%smoothness/num_adj_tets
+          IF(MOD(i,CEILING(tot_tets*1.0D0/(max_prog-1.0D0))) .EQ. 0)THEN
+            WRITE(*,'(A)',ADVANCE='NO')'*'
+            prog=prog+1
+          ENDIF
+        ENDDO
+      ENDSUBROUTINE comp_tet_smooth
 END MODULE tet_analyze
