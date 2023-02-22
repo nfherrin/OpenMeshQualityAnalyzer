@@ -6,6 +6,8 @@
 !-------------------------------------------------------------------------------
 MODULE mesh_types
   IMPLICIT NONE
+  PRIVATE
+  PUBLIC :: vertex_type,element_type_2d,element_type_3d
 
   !vertex pointer necessary to make array of pointers
   TYPE :: vert_ptr
@@ -21,6 +23,9 @@ MODULE mesh_types
     REAL(8) :: z=0
     !vertex id/index
     INTEGER :: id=0
+    CONTAINS
+      !compute distance to another point
+      PROCEDURE :: distance
   ENDTYPE
 
   !the base element type
@@ -49,6 +54,9 @@ MODULE mesh_types
     TYPE(vert_ptr) :: corner(4)
     !volume of the tet
     REAL(8) :: vol=0
+    CONTAINS
+      !compute the circumsphere radius
+      PROCEDURE :: sphere_rad
   ENDTYPE
 
   !the base mesh type
@@ -69,5 +77,68 @@ MODULE mesh_types
     TYPE(element_type_2d), POINTER :: tet(:)
   ENDTYPE
 CONTAINS
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !computes radius of the circumsphere around a tet
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  REAL(8) FUNCTION sphere_rad(this_tet)
+    CLASS(element_type_3d), INTENT(IN) :: this_tet
+
+    REAL(8) :: ba(3),ca(3),da(3)
+    REAL(8) :: len_ba,len_ca,len_da
+    REAL(8) :: cross_cd(3),cross_db(3),cross_bc(3)
+    REAL(8) :: denominator
+    REAL(8) :: circ(3)
+
+    ba(1)=this_tet%corner(2)%p%x-this_tet%corner(1)%p%x
+    ba(2)=this_tet%corner(2)%p%y-this_tet%corner(1)%p%y
+    ba(3)=this_tet%corner(2)%p%z-this_tet%corner(1)%p%z
+
+    ca(1)=this_tet%corner(3)%p%x-this_tet%corner(1)%p%x
+    ca(2)=this_tet%corner(3)%p%y-this_tet%corner(1)%p%y
+    ca(3)=this_tet%corner(3)%p%z-this_tet%corner(1)%p%z
+
+    da(1)=this_tet%corner(4)%p%x-this_tet%corner(1)%p%x
+    da(2)=this_tet%corner(4)%p%y-this_tet%corner(1)%p%y
+    da(3)=this_tet%corner(4)%p%z-this_tet%corner(1)%p%z
+
+    len_ba=ba(1)*ba(1)+ba(2)*ba(2)+ba(3)*ba(3);
+    len_ca=ca(1)*ca(1)+ca(2)*ca(2)+ca(3)*ca(3);
+    len_da=da(1)*da(1)+da(2)*da(2)+da(3)*da(3);
+
+    cross_cd(1)=ca(2)*da(3)-da(2)*ca(3);
+    cross_cd(2)=ca(3)*da(1)-da(3)*ca(1);
+    cross_cd(3)=ca(1)*da(2)-da(1)*ca(2);
+
+    cross_db(1)=da(2)*ba(3)-ba(2)*da(3);
+    cross_db(2)=da(3)*ba(1)-ba(3)*da(1);
+    cross_db(3)=da(1)*ba(2)-ba(1)*da(2);
+
+    cross_bc(1)=ba(2)*ca(3)-ca(2)*ba(3);
+    cross_bc(2)=ba(3)*ca(1)-ca(3)*ba(1);
+    cross_bc(3)=ba(1)*ca(2)-ca(1)*ba(2);
+
+    denominator=0.5D0/(ba(1)*cross_cd(1)+ba(2)*cross_cd(2)+ba(3)*cross_cd(3));
+
+    circ(1)=(len_ba*cross_cd(1)+len_ca*cross_db(1)+len_da*cross_bc(1))*denominator
+    circ(2)=(len_ba*cross_cd(2)+len_ca*cross_db(2)+len_da*cross_bc(2))*denominator
+    circ(3)=(len_ba*cross_cd(3)+len_ca*cross_db(3)+len_da*cross_bc(3))*denominator
+
+    sphere_rad=SQRT(circ(1)**2+circ(2)**2+circ(3)**2)
+  ENDFUNCTION sphere_rad
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !computes the distance to another vertex
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    REAL(8) FUNCTION distance(a,b)
+      CLASS(vertex_type), INTENT(IN) :: a
+      TYPE(vertex_type), INTENT(IN) :: b
+
+      distance=SQRT((a%x-b%x)**2+(a%y-b%y)**2+(a%z-b%z)**2)
+    ENDFUNCTION distance
 
 END MODULE mesh_types

@@ -93,8 +93,7 @@ CONTAINS
     !compute tet skews
     DO i=1,num_tets
       !compute the side of the regular tet in the circumsphere of the tet
-      a_side=4.0D0*sphere_rad(tet(i)%corner(1)%p,tet(i)%corner(2)%p,tet(i)%corner(3)%p, &
-          tet(i)%corner(4)%p)/SQRT(6.0D0)
+      a_side=4.0D0*tet(i)%sphere_rad()/SQRT(6.0D0)
       !compute the volume of the regular tet in the circumsphere of the tet
       vol_reg=a_side**3/(6.0D0*SQRT(2.0D0))
       !compute the cell skew
@@ -151,12 +150,12 @@ CONTAINS
       DO i=1,num_tets
         !compute the length of each of the six sides
         llen=0
-        llen(1)=line_length(tet(i)%corner(1)%p,tet(i)%corner(2)%p)
-        llen(2)=line_length(tet(i)%corner(1)%p,tet(i)%corner(3)%p)
-        llen(3)=line_length(tet(i)%corner(1)%p,tet(i)%corner(4)%p)
-        llen(4)=line_length(tet(i)%corner(2)%p,tet(i)%corner(3)%p)
-        llen(5)=line_length(tet(i)%corner(2)%p,tet(i)%corner(4)%p)
-        llen(6)=line_length(tet(i)%corner(3)%p,tet(i)%corner(4)%p)
+        llen(1)=tet(i)%corner(1)%p%distance(tet(i)%corner(2)%p)
+        llen(2)=tet(i)%corner(1)%p%distance(tet(i)%corner(3)%p)
+        llen(3)=tet(i)%corner(1)%p%distance(tet(i)%corner(4)%p)
+        llen(4)=tet(i)%corner(2)%p%distance(tet(i)%corner(3)%p)
+        llen(5)=tet(i)%corner(2)%p%distance(tet(i)%corner(4)%p)
+        llen(6)=tet(i)%corner(3)%p%distance(tet(i)%corner(4)%p)
         !compute the cell ar
         tet(i)%aspect_ratio=MAXVAL(llen)/MINVAL(llen)
 
@@ -188,66 +187,4 @@ CONTAINS
       ENDDO
       WRITE(*,*)
     ENDSUBROUTINE comp_ar
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !computes line length between two points
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    REAL(8) FUNCTION sphere_rad(a,b,c,d)
-      TYPE(vertex_type), INTENT(IN) :: a,c,b,d
-
-      REAL(8) :: ba(3),ca(3),da(3)
-      REAL(8) :: len_ba,len_ca,len_da
-      REAL(8) :: cross_cd(3),cross_db(3),cross_bc(3)
-      REAL(8) :: denominator
-      REAL(8) :: circ(3)
-
-      ba(1)=b%x-a%x
-      ba(2)=b%y-a%y
-      ba(3)=b%z-a%z
-
-      ca(1)=c%x-a%x
-      ca(2)=c%y-a%y
-      ca(3)=c%z-a%z
-
-      da(1)=d%x-a%x
-      da(2)=d%y-a%y
-      da(3)=d%z-a%z
-
-      len_ba=ba(1)*ba(1)+ba(2)*ba(2)+ba(3)*ba(3);
-      len_ca=ca(1)*ca(1)+ca(2)*ca(2)+ca(3)*ca(3);
-      len_da=da(1)*da(1)+da(2)*da(2)+da(3)*da(3);
-
-      cross_cd(1)=ca(2)*da(3)-da(2)*ca(3);
-      cross_cd(2)=ca(3)*da(1)-da(3)*ca(1);
-      cross_cd(3)=ca(1)*da(2)-da(1)*ca(2);
-
-      cross_db(1)=da(2)*ba(3)-ba(2)*da(3);
-      cross_db(2)=da(3)*ba(1)-ba(3)*da(1);
-      cross_db(3)=da(1)*ba(2)-ba(1)*da(2);
-
-      cross_bc(1)=ba(2)*ca(3)-ca(2)*ba(3);
-      cross_bc(2)=ba(3)*ca(1)-ca(3)*ba(1);
-      cross_bc(3)=ba(1)*ca(2)-ca(1)*ba(2);
-
-      denominator=0.5D0/(ba(1)*cross_cd(1)+ba(2)*cross_cd(2)+ba(3)*cross_cd(3));
-
-      circ(1)=(len_ba*cross_cd(1)+len_ca*cross_db(1)+len_da*cross_bc(1))*denominator
-      circ(2)=(len_ba*cross_cd(2)+len_ca*cross_db(2)+len_da*cross_bc(2))*denominator
-      circ(3)=(len_ba*cross_cd(3)+len_ca*cross_db(3)+len_da*cross_bc(3))*denominator
-
-      sphere_rad=SQRT(circ(1)**2+circ(2)**2+circ(3)**2)
-    ENDFUNCTION sphere_rad
-
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !computes the length of the line between two vertices
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      REAL(8) FUNCTION line_length(a,b)
-        TYPE(vertex_type), INTENT(IN) :: a,b
-
-        line_length=SQRT((a%x-b%x)**2+(a%y-b%y)**2+(a%z-b%z)**2)
-      ENDFUNCTION line_length
 END MODULE mesh_analyze
