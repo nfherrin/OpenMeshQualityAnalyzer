@@ -7,7 +7,7 @@ MODULE mesh_analyze
   USE globals
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: assign_tets,mesh_vol_analysis
+  PUBLIC :: assign_tets,mesh_vol_analysis,mesh_skew_analysis,mesh_ar_analysis
 CONTAINS
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -44,7 +44,7 @@ CONTAINS
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !calculate volumes of each tet
+  !volume analysis of a mesh
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE mesh_vol_analysis(this_mesh)
@@ -62,4 +62,46 @@ CONTAINS
     ENDDO
     this_mesh%vol_sd=SQRT(this_mesh%vol_sd/(this_mesh%num_el-1.0D0))
   ENDSUBROUTINE mesh_vol_analysis
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !skew analysis of a mesh
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    SUBROUTINE mesh_skew_analysis(this_mesh)
+      INTEGER :: i
+      TYPE(mesh_type_3d), INTENT(INOUT) :: this_mesh
+      this_mesh%skew_avg=0
+      DO i=1,this_mesh%num_el
+        this_mesh%skew_avg=this_mesh%skew_avg+this_mesh%tet(i)%p%skew
+      ENDDO
+      this_mesh%skew_avg=this_mesh%skew_avg/(this_mesh%num_el*1.0D0)
+
+      this_mesh%skew_sd=0
+      DO i=1,this_mesh%num_el
+        this_mesh%skew_sd=this_mesh%skew_sd+(this_mesh%tet(i)%p%skew-this_mesh%skew_avg)**2
+      ENDDO
+      this_mesh%skew_sd=SQRT(this_mesh%skew_sd/(this_mesh%num_el-1.0D0))
+    ENDSUBROUTINE mesh_skew_analysis
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !aspect ratio analysis of a mesh
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      SUBROUTINE mesh_ar_analysis(this_mesh)
+        INTEGER :: i
+        TYPE(mesh_type_3d), INTENT(INOUT) :: this_mesh
+        this_mesh%ar_avg=0
+        DO i=1,this_mesh%num_el
+          this_mesh%ar_avg=this_mesh%ar_avg+this_mesh%tet(i)%p%aspect_ratio
+        ENDDO
+        this_mesh%ar_avg=this_mesh%ar_avg/(this_mesh%num_el*1.0D0)
+
+        this_mesh%ar_sd=0
+        DO i=1,this_mesh%num_el
+          this_mesh%ar_sd=this_mesh%ar_sd+(this_mesh%tet(i)%p%aspect_ratio-this_mesh%ar_avg)**2
+        ENDDO
+        this_mesh%ar_sd=SQRT(this_mesh%ar_sd/(this_mesh%num_el-1.0D0))
+      ENDSUBROUTINE mesh_ar_analysis
 END MODULE mesh_analyze

@@ -61,9 +61,10 @@ PROGRAM openmeshqualityanalyzer
 
   WRITE(*,'(A)')'----------------------- Calculating volumes:'
   CALL calc_tet_vols()
+  !for each mesh structure
   CALL mesh_vol_analysis(tot_mesh)
   DO i=minreg,maxreg
-    CALL mesh_vol_analysis(reg_mesh(i))
+    IF(reg_mesh(i)%num_el .GT. 0)CALL mesh_vol_analysis(reg_mesh(i))
   ENDDO
   !finish up progress bar
   DO i=prog,max_prog
@@ -73,9 +74,29 @@ PROGRAM openmeshqualityanalyzer
 
   WRITE(*,'(A)')'----------------------- Computing mesh skewness:'
   CALL comp_tet_skew()
+  !for each mesh structure
+  CALL mesh_skew_analysis(tot_mesh)
+  DO i=minreg,maxreg
+    IF(reg_mesh(i)%num_el .GT. 0)CALL mesh_skew_analysis(reg_mesh(i))
+  ENDDO
+  !finish up progress bar
+  DO i=prog,max_prog
+    WRITE(*,'(A)',ADVANCE='NO')'*'
+  ENDDO
+  WRITE(*,*)
 
   WRITE(*,'(A)')'----------------------- Computing mesh aspect ratio:'
   CALL comp_tet_ar()
+  !for each mesh structure
+  CALL mesh_ar_analysis(tot_mesh)
+  DO i=minreg,maxreg
+    IF(reg_mesh(i)%num_el .GT. 0)CALL mesh_ar_analysis(reg_mesh(i))
+  ENDDO
+  !finish up progress bar
+  DO i=prog,max_prog
+    WRITE(*,'(A)',ADVANCE='NO')'*'
+  ENDDO
+  WRITE(*,*)
 
   WRITE(*,'(A)')'---------------------- Outputting results to '//TRIM(ADJUSTL(mesh_infile))//&
       '_stats.csv'

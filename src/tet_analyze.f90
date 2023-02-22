@@ -65,35 +65,11 @@ CONTAINS
       tet(i)%skew=(vol_reg-tet(i)%vol)/vol_reg
 
       !cell skew average
-      tot_mesh%skew_avg=tot_mesh%skew_avg+tet(i)%skew
-      reg_mesh(tet(i)%reg)%skew_avg=reg_mesh(tet(i)%reg)%skew_avg+tet(i)%skew
       IF(MOD(i,CEILING(tot_tets*1.0D0/(max_prog-1.0D0))) .EQ. 0)THEN
         WRITE(*,'(A)',ADVANCE='NO')'*'
         prog=prog+1
       ENDIF
     ENDDO
-    tot_mesh%skew_avg=tot_mesh%skew_avg/(tot_tets*1.0D0)
-    DO i=minreg,maxreg
-      IF(reg_mesh(i)%num_el .GT. 0)reg_mesh(i)%skew_avg=reg_mesh(i)%skew_avg/ &
-          (reg_mesh(i)%num_el*1.0D0)
-    ENDDO
-
-    !compute skew standard deviation
-    DO i=1,tot_tets
-      tot_mesh%skew_sd=tot_mesh%skew_sd+(tet(i)%skew-tot_mesh%skew_avg)**2
-      reg_mesh(tet(i)%reg)%skew_sd=reg_mesh(tet(i)%reg)%skew_sd+(tet(i)%skew &
-          -reg_mesh(tet(i)%reg)%skew_avg)**2
-    ENDDO
-    tot_mesh%skew_sd=SQRT(tot_mesh%skew_sd/(tot_tets-1.0D0))
-    DO i=minreg,maxreg
-      IF(reg_mesh(i)%num_el .GT. 0)reg_mesh(i)%skew_sd=SQRT(reg_mesh(i)%skew_sd/ &
-          (reg_mesh(i)%num_el-1.0D0))
-    ENDDO
-
-    DO i=prog,max_prog
-      WRITE(*,'(A)',ADVANCE='NO')'*'
-    ENDDO
-    WRITE(*,*)
   ENDSUBROUTINE comp_tet_skew
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -123,35 +99,10 @@ CONTAINS
         !compute the cell ar
         tet(i)%aspect_ratio=MAXVAL(llen)/MINVAL(llen)
 
-        !cell ar average
-        tot_mesh%ar_avg=tot_mesh%ar_avg+tet(i)%aspect_ratio
-        reg_mesh(tet(i)%reg)%ar_avg=reg_mesh(tet(i)%reg)%ar_avg+tet(i)%aspect_ratio
         IF(MOD(i,CEILING(tot_tets*1.0D0/(max_prog-1.0D0))) .EQ. 0)THEN
           WRITE(*,'(A)',ADVANCE='NO')'*'
           prog=prog+1
         ENDIF
       ENDDO
-      tot_mesh%ar_avg=tot_mesh%ar_avg/(tot_tets*1.0D0)
-      DO i=minreg,maxreg
-        IF(reg_mesh(i)%num_el .GT. 0)reg_mesh(i)%ar_avg=reg_mesh(i)%ar_avg/ &
-            (reg_mesh(i)%num_el*1.0D0)
-      ENDDO
-
-      !compute ar standard deviation
-      DO i=1,tot_tets
-        tot_mesh%ar_sd=tot_mesh%ar_sd+(tet(i)%aspect_ratio-tot_mesh%ar_avg)**2
-        reg_mesh(tet(i)%reg)%ar_sd=reg_mesh(tet(i)%reg)%ar_sd+(tet(i)%aspect_ratio- &
-            reg_mesh(tet(i)%reg)%ar_avg)**2
-      ENDDO
-      tot_mesh%ar_sd=SQRT(tot_mesh%ar_sd/(tot_tets-1.0D0))
-      DO i=minreg,maxreg
-        IF(reg_mesh(i)%num_el .GT. 0)reg_mesh(i)%ar_sd=SQRT(reg_mesh(i)%ar_sd/ &
-            (reg_mesh(i)%num_el-1.0D0))
-      ENDDO
-
-      DO i=prog,max_prog
-        WRITE(*,'(A)',ADVANCE='NO')'*'
-      ENDDO
-      WRITE(*,*)
     ENDSUBROUTINE comp_tet_ar
 END MODULE tet_analyze

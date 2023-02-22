@@ -20,16 +20,18 @@ CONTAINS
     WRITE(30,'(A)')"Region, Vol, Tets, Avg Tet Vol, Tet Vol SD, Avg Skew, Skew SD, Avg AR, AR SD,"
 
     DO i=minreg,maxreg
-      WRITE(30,'(I0,A)',ADVANCE='NO')i,', '
-      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%vol,', '
-      WRITE(30,'(I0,A)',ADVANCE='NO')reg_mesh(i)%num_el,', '
-      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%vol_avg,', '
-      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%vol_sd,', '
-      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%skew_avg,', '
-      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%skew_sd,', '
-      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%ar_avg,', '
-      WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%ar_sd,', '
-      WRITE(30,*)
+      IF(reg_mesh(i)%num_el .GT. 0)THEN
+        WRITE(30,'(I0,A)',ADVANCE='NO')i,', '
+        WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%vol,', '
+        WRITE(30,'(I0,A)',ADVANCE='NO')reg_mesh(i)%num_el,', '
+        WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%vol_avg,', '
+        WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%vol_sd,', '
+        WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%skew_avg,', '
+        WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%skew_sd,', '
+        WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%ar_avg,', '
+        WRITE(30,'(ES14.8,A)',ADVANCE='NO')reg_mesh(i)%ar_sd,', '
+        WRITE(30,*)
+      ENDIF
     ENDDO
     WRITE(30,'(A,A)',ADVANCE='NO')'total, '
     WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%vol,', '
