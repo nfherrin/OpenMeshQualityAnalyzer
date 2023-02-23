@@ -54,9 +54,9 @@ CONTAINS
 
     !read in the boundary face data
     READ(20,*)tot_bcf
-    ALLOCATE(bc_data(tot_bcf,2))
+    ALLOCATE(bc_data(tot_bcf,3))
     DO i=1,tot_bcf
-      READ(20,*)bc_data(i,:)
+      READ(20,*)bc_data(i,1:2)
     ENDDO
 
     !read in the adjancency data

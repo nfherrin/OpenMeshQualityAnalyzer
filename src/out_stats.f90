@@ -17,6 +17,7 @@ CONTAINS
 
     OPEN(UNIT=30,FILE=TRIM(ADJUSTL(mesh_infile))//'_stats.csv',ACTION='WRITE',STATUS='REPLACE')
 
+    WRITE(30,'(A)')'3D Mesh Data,'
     WRITE(30,'(A)')"Region, Vol, Tets, Avg Tet Vol, Tet Vol SD, Avg Skew, Skew SD, Avg AR, AR SD, &
         &Avg Smooth, Smooth SD,"
 
@@ -47,6 +48,10 @@ CONTAINS
     WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%ar_sd,', '
     WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%smooth_avg,', '
     WRITE(30,'(ES14.8,A)',ADVANCE='NO')tot_mesh%smooth_sd,', '
+    WRITE(30,'(A)')', '
+    WRITE(30,'(A)')', '
+    WRITE(30,'(A)')', '
+    WRITE(30,'(A)')'2D Mesh Data,'
     CLOSE(30)
   ENDSUBROUTINE output_statistics
 END MODULE out_stats

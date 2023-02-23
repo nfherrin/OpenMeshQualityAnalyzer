@@ -11,6 +11,7 @@ PROGRAM openmeshqualityanalyzer
   USE mesh_analyze
   USE tet_analyze
   USE boundary_conditions
+  USE mesh_2d_construct
   IMPLICIT NONE
 
   !> The number of provided command line arguments
@@ -59,7 +60,7 @@ PROGRAM openmeshqualityanalyzer
   !assign tets to each volume
   CALL assign_tets()
 
-  WRITE(*,'(A)')'----------------------- Calculating volumes:'
+  WRITE(*,'(A)')'----------------------- Calculating 3D volumes:'
   CALL calc_tet_vols()
   !for each mesh structure
   CALL mesh_vol_analysis(tot_mesh)
@@ -72,7 +73,7 @@ PROGRAM openmeshqualityanalyzer
   ENDDO
   WRITE(*,*)
 
-  WRITE(*,'(A)')'----------------------- Computing mesh skewness:'
+  WRITE(*,'(A)')'----------------------- Computing 3D mesh skewness:'
   CALL comp_tet_skew()
   !for each mesh structure
   CALL mesh_skew_analysis(tot_mesh)
@@ -85,7 +86,7 @@ PROGRAM openmeshqualityanalyzer
   ENDDO
   WRITE(*,*)
 
-  WRITE(*,'(A)')'----------------------- Computing mesh aspect ratio:'
+  WRITE(*,'(A)')'----------------------- Computing 3D mesh aspect ratio:'
   CALL comp_tet_ar()
   !for each mesh structure
   CALL mesh_ar_analysis(tot_mesh)
@@ -98,7 +99,7 @@ PROGRAM openmeshqualityanalyzer
   ENDDO
   WRITE(*,*)
 
-  WRITE(*,'(A)')'----------------------- Computing mesh smoothness:'
+  WRITE(*,'(A)')'----------------------- Computing 3D mesh smoothness:'
   CALL comp_tet_smooth()
   !for each mesh structure
   CALL mesh_smooth_analysis(tot_mesh)
@@ -110,6 +111,17 @@ PROGRAM openmeshqualityanalyzer
     WRITE(*,'(A)',ADVANCE='NO')'*'
   ENDDO
   WRITE(*,*)
+
+  WRITE(*,'(A)')'----------------------- Constructing 2D Meshes:'
+  bc_locs(1)=MINVAL(vertex(:)%x)
+  bc_locs(2)=MAXVAL(vertex(:)%x)
+  bc_locs(3)=MINVAL(vertex(:)%y)
+  bc_locs(4)=MAXVAL(vertex(:)%y)
+  bc_locs(5)=MINVAL(vertex(:)%z)
+  bc_locs(6)=MAXVAL(vertex(:)%z)
+  DO i=1,6
+    CALL construct_bc_mesh(tot_side_mesh(i),i)
+  ENDDO
 
   WRITE(*,'(A)')'---------------------- Outputting results to '//TRIM(ADJUSTL(mesh_infile))//&
       '_stats.csv'

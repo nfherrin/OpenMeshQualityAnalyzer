@@ -11,7 +11,6 @@ MODULE boundary_conditions
     PUBLIC :: adjacency_calc
 
     INTEGER, ALLOCATABLE :: tbound_cond(:,:)
-    INTEGER, ALLOCATABLE :: bc_side(:)
 CONTAINS
 
   !calculate adjacencies between tets
@@ -47,19 +46,17 @@ CONTAINS
       og_face=(/tet(i)%corner(1)%p%id,tet(i)%corner(2)%p%id,tet(i)%corner(3)%p%id/)
       CALL find_adj(og_face,i,3,adj_idx)
     ENDDO
-    ALLOCATE(bc_data(tot_bcf,2),bc_side(tot_bcf))
+    ALLOCATE(bc_data(tot_bcf,3))
     bc_data=0
-    bc_side=0
     DO i=1,tot_bcf
-      bc_data(i,:)=tbound_cond(i,:)
+      bc_data(i,1:2)=tbound_cond(i,:)
     ENDDO
 
-    CALL det_side_flatness()
     DO i=prog,max_prog
       WRITE(*,'(A)',ADVANCE='NO')'*'
     ENDDO
     WRITE(*,*)
-    DEALLOCATE(tbound_cond,bc_side)
+    DEALLOCATE(tbound_cond)
   ENDSUBROUTINE adjacency_calc
 
   !find adjacency for a given face
@@ -122,73 +119,6 @@ CONTAINS
       match=.TRUE.
     ENDIF
   ENDSUBROUTINE check_face
-
-  !determine if a boundary side (in the cartesian directions) is flat
-  SUBROUTINE det_side_flatness()
-    INTEGER :: i,j,el_id,face_idx
-    TYPE(vertex_type) :: face_point(3),ext_point
-    REAL(8) :: norm_vec(3),lambda,offset,a(3),b(3)
-
-    !sides are assumed to be flat, and if they are not this is set to false.
-    side_flat=.TRUE.
-    DO i=1,tot_bcf
-      el_id=bc_data(i,1)
-      face_idx=0
-      !assign extruded and face boundary points
-      DO j=1,4
-        IF(bc_data(i,2) .NE. j-1)THEN
-          face_idx=face_idx+1
-          face_point(face_idx)=tet(el_id)%corner(j)%p
-        ELSE
-          ext_point=tet(el_id)%corner(j)%p
-        ENDIF
-      ENDDO
-      !get the outward going unit normal vector for the tet for this face
-      a=(/face_point(2)%x-face_point(1)%x, face_point(2)%y-face_point(1)%y, &
-          face_point(2)%z-face_point(1)%z/)
-      b=(/face_point(3)%x-face_point(1)%x, face_point(3)%y-face_point(1)%y, &
-          face_point(3)%z-face_point(1)%z/)
-      norm_vec=cross(a, b)
-      offset=face_point(1)%x*norm_vec(1)+face_point(1)%y*norm_vec(2)+face_point(1)%z*norm_vec(3)
-      lambda=(offset-norm_vec(1)*ext_point%x-norm_vec(2)*ext_point%y-norm_vec(3)*ext_point%z) &
-          /(norm_vec(1)**2+norm_vec(2)**2+norm_vec(3)**2)
-      norm_vec=norm_vec*lambda
-      norm_vec=norm_vec/(SQRT(norm_vec(1)**2+norm_vec(2)**2+norm_vec(3)**2))
-
-      !figure out which side of the problem this bc faces
-      IF(ABS(MAXVAL(norm_vec)) .GT. ABS(MINVAL(norm_vec)))THEN
-        !face on a positive side, assign the side for that face
-        IF(MAXLOC(norm_vec,1) .EQ. 1)THEN
-          bc_side(i)=2
-        ELSEIF(MAXLOC(norm_vec,1) .EQ. 2)THEN
-          bc_side(i)=4
-        ELSE
-          bc_side(i)=6
-        ENDIF
-        IF(ABS(MAXVAL(norm_vec)-1.0) .LE. 1.0E-14)THEN
-          !face is flat, do nothing
-        ElSE
-          !face is not flat, it only takes 1 for the side to not be flat
-          side_flat(bc_side(i))=.FALSE.
-        ENDIF
-      ELSE
-        !face on a negative side, assign the side for that face
-        IF(MINLOC(norm_vec,1) .EQ. 1)THEN
-          bc_side(i)=1
-        ELSEIF(MINLOC(norm_vec,1) .EQ. 2)THEN
-          bc_side(i)=3
-        ELSE
-          bc_side(i)=5
-        ENDIF
-        IF(ABS(MINVAL(norm_vec)+1.0) .LE. 1.0E-14)THEN
-          !face is flat, do nothing
-        ElSE
-          !face is not flat, it only takes 1 for the side to not be flat
-          side_flat(bc_side(i))=.FALSE.
-        ENDIF
-      ENDIF
-    ENDDO
-  ENDSUBROUTINE det_side_flatness
 
   !cross product
   FUNCTION cross(a, b)
