@@ -8,7 +8,7 @@ MODULE boundary_conditions
     USE globals
     IMPLICIT NONE
     PRIVATE
-    PUBLIC :: adjacency_calc
+    PUBLIC :: adjacency_calc, compute_bc_sides
 
     INTEGER, ALLOCATABLE :: tbound_cond(:,:)
 CONTAINS
@@ -95,7 +95,7 @@ CONTAINS
       tet(el_idx)%adj_face(faceid+1)=0
       tot_bcf=tot_bcf+1
       tbound_cond(tot_bcf,1)=el_idx
-      tbound_cond(tot_bcf,2)=faceid
+      tbound_cond(tot_bcf,2)=faceid+1
     ENDIF
   ENDSUBROUTINE find_adj
 
@@ -120,16 +120,6 @@ CONTAINS
     ENDIF
   ENDSUBROUTINE check_face
 
-  !cross product
-  FUNCTION cross(a, b)
-    REAL(8) :: cross(3)
-    REAL(8), INTENT(IN) :: a(3), b(3)
-
-    cross(1) = a(2) * b(3) - a(3) * b(2)
-    cross(2) = a(3) * b(1) - a(1) * b(3)
-    cross(3) = a(1) * b(2) - a(2) * b(1)
-  ENDFUNCTION cross
-
   !order the vertices by bubble sort for a given tet
   SUBROUTINE orderverts(this_tet)
     TYPE(element_type_3d), INTENT(INOUT) :: this_tet
@@ -150,4 +140,86 @@ CONTAINS
       IF(changes .EQ. 0)EXIT
     ENDDO
   ENDSUBROUTINE orderverts
+
+  SUBROUTINE compute_bc_sides()
+    INTEGER :: i,j,face_idx
+    REAL(8) :: face_point(3,3),ext_point(3),norm_vec(3),lambda,offset
+    bc_locs(1)=MINVAL(vertex(:)%x)
+    bc_locs(2)=MAXVAL(vertex(:)%x)
+    bc_locs(3)=MINVAL(vertex(:)%y)
+    bc_locs(4)=MAXVAL(vertex(:)%y)
+    bc_locs(5)=MINVAL(vertex(:)%z)
+    bc_locs(6)=MAXVAL(vertex(:)%z)
+
+    IF(MINVAL(bc_data(:,2)) .LE. 0 .OR. MAXVAL(bc_data(:,2)) .GE. 5)THEN
+      WRITE(*,*)'error, bc faces werent increased',MINVAL(bc_data(:,2)),MAXVAL(bc_data(:,2))
+      STOP 'here1'
+    ENDIF
+    !assume that sides are flat, figure out if they're not...
+    side_flat=.TRUE.
+    !go through all bc faces
+    DO i=1,tot_bcf
+      !assign the face and extruded points for the cross product
+      face_idx=0
+      DO j=1,4
+        IF(bc_data(i,2) .EQ. j)THEN
+          !if it equals the face index the it's the extruded point
+          ext_point(:)=(/tet(bc_data(i,1))%corner(j)%p%x,tet(bc_data(i,1))%corner(j)%p%y,&
+              tet(bc_data(i,1))%corner(j)%p%z/)
+        ELSE
+          !if doesn't equal the face index the it's one of the face points
+          face_idx=face_idx+1
+          face_point(face_idx,:)=(/tet(bc_data(i,1))%corner(j)%p%x, &
+              tet(bc_data(i,1))%corner(j)%p%y,tet(bc_data(i,1))%corner(j)%p%z/)
+        ENDIF
+      ENDDO
+      !get the outward going normal vector for the tet for this face
+      norm_vec=cross(face_point(2,:)-face_point(1,:), face_point(3,:)-face_point(1,:))
+      offset=face_point(1,1)*norm_vec(1)+face_point(1,2)*norm_vec(2)+face_point(1,3)*norm_vec(3)
+      lambda=(offset-norm_vec(1)*ext_point(1)-norm_vec(2)*ext_point(2)-norm_vec(3)*ext_point(3)) &
+          /(norm_vec(1)**2+norm_vec(2)**2+norm_vec(3)**2)
+      norm_vec=norm_vec*lambda
+      norm_vec=norm_vec/(SQRT(norm_vec(1)**2+norm_vec(2)**2+norm_vec(3)**2))
+
+      !figure out which side the bc is on
+      IF(ABS(MAXVAL(norm_vec)) .GT. ABS(MINVAL(norm_vec)))THEN
+        !the primary direction is positive, so this is a +x, +y, or +z face
+        IF(MAXLOC(norm_vec,1) .EQ. 1)THEN
+          !+x
+          bc_data(i,3)=2
+        ELSEIF(MAXLOC(norm_vec,1) .EQ. 2)THEN
+          !+y
+          bc_data(i,3)=4
+        ELSE
+          !+z
+          bc_data(i,3)=6
+        ENDIF
+      ELSE
+        !the primary direction is negative, so this is a -x, -y, or -z face
+        IF(MINLOC(norm_vec,1) .EQ. 1)THEN
+          !-x
+          bc_data(i,3)=1
+        ELSEIF(MINLOC(norm_vec,1) .EQ. 2)THEN
+          !-y
+          bc_data(i,3)=3
+        ELSE
+          !-z
+          bc_data(i,3)=5
+        ENDIF
+      ENDIF
+
+      !check fot see if the side is flat, it only takes one to make it not flat
+      IF(MAXVAL(ABS(norm_vec))-1.0D0 .LE. -1.0D-14)side_flat(bc_data(i,3))=.FALSE.
+    ENDDO
+  ENDSUBROUTINE compute_bc_sides
+
+  !cross product
+  FUNCTION cross(a, b)
+    REAL(8) :: cross(3)
+    REAL(8), INTENT(IN) :: a(3), b(3)
+
+    cross(1) = a(2) * b(3) - a(3) * b(2)
+    cross(2) = a(3) * b(1) - a(1) * b(3)
+    cross(3) = a(1) * b(2) - a(2) * b(1)
+  ENDFUNCTION cross
 END MODULE boundary_conditions

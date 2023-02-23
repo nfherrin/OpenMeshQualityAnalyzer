@@ -58,6 +58,7 @@ CONTAINS
     DO i=1,tot_bcf
       READ(20,*)bc_data(i,1:2)
     ENDDO
+    bc_data(:,2)=bc_data(:,2)+1
 
     !read in the adjancency data
     WRITE(*,'(A)',ADVANCE='NO')'Progress:'

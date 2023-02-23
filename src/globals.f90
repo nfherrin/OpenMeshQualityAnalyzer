@@ -37,6 +37,9 @@ MODULE globals
   !and third data column is direction 1 to 6 ordered -x +x -y +y -z +z
   INTEGER, ALLOCATABLE :: bc_data(:,:)
 
+  !side flatness ordered -x +x -y +y -z +z
+  LOGICAL :: side_flat(6)=.TRUE.
+
   !minimum and maximum region bounds
   INTEGER :: minreg=0,maxreg=0
 

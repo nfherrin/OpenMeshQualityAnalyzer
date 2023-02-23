@@ -56,6 +56,7 @@ PROGRAM openmeshqualityanalyzer
     CASE DEFAULT
       STOP "Mesh format not yet supported"
   ENDSELECT
+  CALL compute_bc_sides()
 
   !assign tets to each volume
   CALL assign_tets()
@@ -113,12 +114,6 @@ PROGRAM openmeshqualityanalyzer
   WRITE(*,*)
 
   WRITE(*,'(A)')'----------------------- Constructing 2D Meshes:'
-  bc_locs(1)=MINVAL(vertex(:)%x)
-  bc_locs(2)=MAXVAL(vertex(:)%x)
-  bc_locs(3)=MINVAL(vertex(:)%y)
-  bc_locs(4)=MAXVAL(vertex(:)%y)
-  bc_locs(5)=MINVAL(vertex(:)%z)
-  bc_locs(6)=MAXVAL(vertex(:)%z)
   DO i=1,6
     CALL construct_bc_mesh(tot_side_mesh(i),i)
   ENDDO
