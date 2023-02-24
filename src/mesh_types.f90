@@ -42,15 +42,22 @@ MODULE mesh_types
     REAL(8) :: smoothness
   ENDTYPE
 
-  !the specific 2d element type
+  !the specific 2d element type (a triangle)
   TYPE, EXTENDS(base_element_type) :: element_type_2d
     !3 corners of the triangle
     TYPE(vert_ptr) :: corner(3)
     !area of the triangle
     REAL(8) :: area=0
+    !Adjacent tri id for sides 1 to 3
+    INTEGER :: adj_id(3)=0
+    !Adjacent tri side for sides 1 to 3
+    INTEGER :: adj_side(3)=0
+    CONTAINS
+      !compute the circumcircle radius
+      PROCEDURE :: circ_rad
   ENDTYPE
 
-  !the specific 3d element type
+  !the specific 3d element type (a tetrahedron)
   TYPE, EXTENDS(base_element_type) :: element_type_3d
     !4 corners of the tet
     TYPE(vert_ptr) :: corner(4)
@@ -124,7 +131,7 @@ CONTAINS
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !computes radius of the circumsphere around a tet
+  !computes radius of the circumsphere around a tet
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   REAL(8) FUNCTION sphere_rad(this_tet)
@@ -175,14 +182,30 @@ CONTAINS
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !computes the distance to another vertex
+  !computes radius of the circumcircle around a tet
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    REAL(8) FUNCTION distance(a,b)
-      CLASS(vertex_type), INTENT(IN) :: a
-      TYPE(vertex_type), INTENT(IN) :: b
+  REAL(8) FUNCTION circ_rad(this_tri)
+    CLASS(element_type_2d), INTENT(IN) :: this_tri
+    REAL(8) :: la,lb,lc
 
-      distance=SQRT((a%x-b%x)**2+(a%y-b%y)**2+(a%z-b%z)**2)
-    ENDFUNCTION distance
+    la=this_tri%corner(1)%p%distance(this_tri%corner(2)%p)
+    lb=this_tri%corner(1)%p%distance(this_tri%corner(3)%p)
+    lc=this_tri%corner(2)%p%distance(this_tri%corner(3)%p)
+
+    circ_rad=la*lb*lc/(4.0D0*this_tri%area)
+  ENDFUNCTION circ_rad
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !computes the distance to another vertex
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  REAL(8) FUNCTION distance(a,b)
+    CLASS(vertex_type), INTENT(IN) :: a
+    TYPE(vertex_type), INTENT(IN) :: b
+
+    distance=SQRT((a%x-b%x)**2+(a%y-b%y)**2+(a%z-b%z)**2)
+  ENDFUNCTION distance
 
 END MODULE mesh_types

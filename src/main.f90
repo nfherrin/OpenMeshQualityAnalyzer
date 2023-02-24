@@ -8,13 +8,16 @@ PROGRAM openmeshqualityanalyzer
   USE read_gmsh
   USE out_stats
   USE read_thrm
-  USE mesh_analyze
+  USE mesh_analyze_3d
+  USE mesh_analyze_2d
   USE tet_analyze
+  USE tri_analyze
   USE boundary_conditions
+  USE mesh_2d_construct
   IMPLICIT NONE
 
   !> The number of provided command line arguments
-  INTEGER :: arg_count,i
+  INTEGER :: arg_count,i,j
 
   !type of mesh format
   CHARACTER(20) :: mesh_format="",tchar1,tchar2
@@ -55,11 +58,12 @@ PROGRAM openmeshqualityanalyzer
     CASE DEFAULT
       STOP "Mesh format not yet supported"
   ENDSELECT
+  CALL compute_bc_sides()
 
   !assign tets to each volume
   CALL assign_tets()
 
-  WRITE(*,'(A)')'----------------------- Calculating volumes:'
+  WRITE(*,'(A)')'----------------------- Calculating 3D volumes:'
   CALL calc_tet_vols()
   !for each mesh structure
   CALL mesh_vol_analysis(tot_mesh)
@@ -72,7 +76,7 @@ PROGRAM openmeshqualityanalyzer
   ENDDO
   WRITE(*,*)
 
-  WRITE(*,'(A)')'----------------------- Computing mesh skewness:'
+  WRITE(*,'(A)')'----------------------- Computing 3D mesh skewness:'
   CALL comp_tet_skew()
   !for each mesh structure
   CALL mesh_skew_analysis(tot_mesh)
@@ -85,7 +89,7 @@ PROGRAM openmeshqualityanalyzer
   ENDDO
   WRITE(*,*)
 
-  WRITE(*,'(A)')'----------------------- Computing mesh aspect ratio:'
+  WRITE(*,'(A)')'----------------------- Computing 3D mesh aspect ratio:'
   CALL comp_tet_ar()
   !for each mesh structure
   CALL mesh_ar_analysis(tot_mesh)
@@ -98,12 +102,79 @@ PROGRAM openmeshqualityanalyzer
   ENDDO
   WRITE(*,*)
 
-  WRITE(*,'(A)')'----------------------- Computing mesh smoothness:'
+  WRITE(*,'(A)')'----------------------- Computing 3D mesh smoothness:'
   CALL comp_tet_smooth()
   !for each mesh structure
   CALL mesh_smooth_analysis(tot_mesh)
   DO i=minreg,maxreg
     IF(reg_mesh(i)%num_el .GT. 0)CALL mesh_smooth_analysis(reg_mesh(i))
+  ENDDO
+  !finish up progress bar
+  DO i=prog,max_prog
+    WRITE(*,'(A)',ADVANCE='NO')'*'
+  ENDDO
+  WRITE(*,*)
+
+  WRITE(*,'(A)')'----------------------- Constructing 2D Meshes:'
+  CALL generate_bc_triangles()
+  ALLOCATE(reg_side_mesh(6,minreg:maxreg))
+  DO i=1,6
+    CALL construct_bc_mesh(tot_side_mesh(i),reg_side_mesh(i,:),i)
+  ENDDO
+
+  WRITE(*,'(A)')'----------------------- Calculating 2D areas:'
+  CALL calc_tri_areas()
+  !for each mesh structure
+  DO i=1,6
+    CALL mesh_2d_area_analysis(tot_side_mesh(i))
+    DO j=minreg,maxreg
+      IF(reg_side_mesh(i,j)%num_el .GT. 0)CALL mesh_2d_area_analysis(reg_side_mesh(i,j))
+    ENDDO
+  ENDDO
+  !finish up progress bar
+  DO i=prog,max_prog
+    WRITE(*,'(A)',ADVANCE='NO')'*'
+  ENDDO
+  WRITE(*,*)
+
+  WRITE(*,'(A)')'----------------------- Calculating 2D mesh skewness:'
+  CALL comp_tri_skew()
+  !for each mesh structure
+  DO i=1,6
+    CALL mesh_2d_skew_analysis(tot_side_mesh(i))
+    DO j=minreg,maxreg
+      IF(reg_side_mesh(i,j)%num_el .GT. 0)CALL mesh_2d_skew_analysis(reg_side_mesh(i,j))
+    ENDDO
+  ENDDO
+  !finish up progress bar
+  DO i=prog,max_prog
+    WRITE(*,'(A)',ADVANCE='NO')'*'
+  ENDDO
+  WRITE(*,*)
+
+  WRITE(*,'(A)')'----------------------- Calculating 2D mesh aspect ratio:'
+  CALL comp_tri_ar()
+  !for each mesh structure
+  DO i=1,6
+    CALL mesh_2d_ar_analysis(tot_side_mesh(i))
+    DO j=minreg,maxreg
+      IF(reg_side_mesh(i,j)%num_el .GT. 0)CALL mesh_2d_ar_analysis(reg_side_mesh(i,j))
+    ENDDO
+  ENDDO
+  !finish up progress bar
+  DO i=prog,max_prog
+    WRITE(*,'(A)',ADVANCE='NO')'*'
+  ENDDO
+  WRITE(*,*)
+
+  WRITE(*,'(A)')'----------------------- Calculating 2D mesh aspect smoothness:'
+  CALL comp_tri_smooth()
+  !for each mesh structure
+  DO i=1,6
+    CALL mesh_2d_smooth_analysis(tot_side_mesh(i))
+    DO j=minreg,maxreg
+      IF(reg_side_mesh(i,j)%num_el .GT. 0)CALL mesh_2d_smooth_analysis(reg_side_mesh(i,j))
+    ENDDO
   ENDDO
   !finish up progress bar
   DO i=prog,max_prog

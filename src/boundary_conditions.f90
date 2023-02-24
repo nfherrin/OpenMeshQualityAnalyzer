@@ -8,10 +8,9 @@ MODULE boundary_conditions
     USE globals
     IMPLICIT NONE
     PRIVATE
-    PUBLIC :: adjacency_calc
+    PUBLIC :: adjacency_calc, compute_bc_sides,generate_bc_triangles
 
     INTEGER, ALLOCATABLE :: tbound_cond(:,:)
-    INTEGER, ALLOCATABLE :: bc_side(:)
 CONTAINS
 
   !calculate adjacencies between tets
@@ -47,19 +46,17 @@ CONTAINS
       og_face=(/tet(i)%corner(1)%p%id,tet(i)%corner(2)%p%id,tet(i)%corner(3)%p%id/)
       CALL find_adj(og_face,i,3,adj_idx)
     ENDDO
-    ALLOCATE(bc_data(tot_bcf,2),bc_side(tot_bcf))
+    ALLOCATE(bc_data(tot_bcf,3))
     bc_data=0
-    bc_side=0
     DO i=1,tot_bcf
-      bc_data(i,:)=tbound_cond(i,:)
+      bc_data(i,1:2)=tbound_cond(i,:)
     ENDDO
 
-    CALL det_side_flatness()
     DO i=prog,max_prog
       WRITE(*,'(A)',ADVANCE='NO')'*'
     ENDDO
     WRITE(*,*)
-    DEALLOCATE(tbound_cond,bc_side)
+    DEALLOCATE(tbound_cond)
   ENDSUBROUTINE adjacency_calc
 
   !find adjacency for a given face
@@ -98,7 +95,7 @@ CONTAINS
       tet(el_idx)%adj_face(faceid+1)=0
       tot_bcf=tot_bcf+1
       tbound_cond(tot_bcf,1)=el_idx
-      tbound_cond(tot_bcf,2)=faceid
+      tbound_cond(tot_bcf,2)=faceid+1
     ENDIF
   ENDSUBROUTINE find_adj
 
@@ -123,83 +120,6 @@ CONTAINS
     ENDIF
   ENDSUBROUTINE check_face
 
-  !determine if a boundary side (in the cartesian directions) is flat
-  SUBROUTINE det_side_flatness()
-    INTEGER :: i,j,el_id,face_idx
-    TYPE(vertex_type) :: face_point(3),ext_point
-    REAL(8) :: norm_vec(3),lambda,offset,a(3),b(3)
-
-    !sides are assumed to be flat, and if they are not this is set to false.
-    side_flat=.TRUE.
-    DO i=1,tot_bcf
-      el_id=bc_data(i,1)
-      face_idx=0
-      !assign extruded and face boundary points
-      DO j=1,4
-        IF(bc_data(i,2) .NE. j-1)THEN
-          face_idx=face_idx+1
-          face_point(face_idx)=tet(el_id)%corner(j)%p
-        ELSE
-          ext_point=tet(el_id)%corner(j)%p
-        ENDIF
-      ENDDO
-      !get the outward going unit normal vector for the tet for this face
-      a=(/face_point(2)%x-face_point(1)%x, face_point(2)%y-face_point(1)%y, &
-          face_point(2)%z-face_point(1)%z/)
-      b=(/face_point(3)%x-face_point(1)%x, face_point(3)%y-face_point(1)%y, &
-          face_point(3)%z-face_point(1)%z/)
-      norm_vec=cross(a, b)
-      offset=face_point(1)%x*norm_vec(1)+face_point(1)%y*norm_vec(2)+face_point(1)%z*norm_vec(3)
-      lambda=(offset-norm_vec(1)*ext_point%x-norm_vec(2)*ext_point%y-norm_vec(3)*ext_point%z) &
-          /(norm_vec(1)**2+norm_vec(2)**2+norm_vec(3)**2)
-      norm_vec=norm_vec*lambda
-      norm_vec=norm_vec/(SQRT(norm_vec(1)**2+norm_vec(2)**2+norm_vec(3)**2))
-
-      !figure out which side of the problem this bc faces
-      IF(ABS(MAXVAL(norm_vec)) .GT. ABS(MINVAL(norm_vec)))THEN
-        !face on a positive side, assign the side for that face
-        IF(MAXLOC(norm_vec,1) .EQ. 1)THEN
-          bc_side(i)=2
-        ELSEIF(MAXLOC(norm_vec,1) .EQ. 2)THEN
-          bc_side(i)=4
-        ELSE
-          bc_side(i)=6
-        ENDIF
-        IF(ABS(MAXVAL(norm_vec)-1.0) .LE. 1.0E-14)THEN
-          !face is flat, do nothing
-        ElSE
-          !face is not flat, it only takes 1 for the side to not be flat
-          side_flat(bc_side(i))=.FALSE.
-        ENDIF
-      ELSE
-        !face on a negative side, assign the side for that face
-        IF(MINLOC(norm_vec,1) .EQ. 1)THEN
-          bc_side(i)=1
-        ELSEIF(MINLOC(norm_vec,1) .EQ. 2)THEN
-          bc_side(i)=3
-        ELSE
-          bc_side(i)=5
-        ENDIF
-        IF(ABS(MINVAL(norm_vec)+1.0) .LE. 1.0E-14)THEN
-          !face is flat, do nothing
-        ElSE
-          !face is not flat, it only takes 1 for the side to not be flat
-          side_flat(bc_side(i))=.FALSE.
-        ENDIF
-      ENDIF
-    ENDDO
-  ENDSUBROUTINE det_side_flatness
-
-  !cross product
-  FUNCTION cross(a, b)
-    REAL(8) :: cross(3)
-    REAL(8), INTENT(IN) :: a(3), b(3)
-
-    cross(1) = a(2) * b(3) - a(3) * b(2)
-    cross(2) = a(3) * b(1) - a(1) * b(3)
-    cross(3) = a(1) * b(2) - a(2) * b(1)
-  ENDFUNCTION cross
-
   !order the vertices by bubble sort for a given tet
   SUBROUTINE orderverts(this_tet)
     TYPE(element_type_3d), INTENT(INOUT) :: this_tet
@@ -220,4 +140,186 @@ CONTAINS
       IF(changes .EQ. 0)EXIT
     ENDDO
   ENDSUBROUTINE orderverts
+
+  SUBROUTINE compute_bc_sides()
+    INTEGER :: i,j,face_idx
+    REAL(8) :: face_point(3,3),ext_point(3),norm_vec(3),lambda,offset
+    bc_locs(1)=MINVAL(vertex(:)%x)
+    bc_locs(2)=MAXVAL(vertex(:)%x)
+    bc_locs(3)=MINVAL(vertex(:)%y)
+    bc_locs(4)=MAXVAL(vertex(:)%y)
+    bc_locs(5)=MINVAL(vertex(:)%z)
+    bc_locs(6)=MAXVAL(vertex(:)%z)
+    ext_point=0
+
+    IF(MINVAL(bc_data(:,2)) .LE. 0 .OR. MAXVAL(bc_data(:,2)) .GE. 5)THEN
+      WRITE(*,*)'error, bc faces werent increased',MINVAL(bc_data(:,2)),MAXVAL(bc_data(:,2))
+      STOP 'here1'
+    ENDIF
+    !assume that sides are flat, figure out if they're not...
+    side_flat=.TRUE.
+    !go through all bc faces
+    DO i=1,tot_bcf
+      !assign the face and extruded points for the cross product
+      face_idx=0
+      DO j=1,4
+        IF(bc_data(i,2) .EQ. j)THEN
+          !if it equals the face index the it's the extruded point
+          ext_point(:)=(/tet(bc_data(i,1))%corner(j)%p%x,tet(bc_data(i,1))%corner(j)%p%y,&
+              tet(bc_data(i,1))%corner(j)%p%z/)
+        ELSE
+          !if doesn't equal the face index the it's one of the face points
+          face_idx=face_idx+1
+          face_point(face_idx,:)=(/tet(bc_data(i,1))%corner(j)%p%x, &
+              tet(bc_data(i,1))%corner(j)%p%y,tet(bc_data(i,1))%corner(j)%p%z/)
+        ENDIF
+      ENDDO
+      !get the outward going normal vector for the tet for this face
+      norm_vec=cross(face_point(2,:)-face_point(1,:), face_point(3,:)-face_point(1,:))
+      offset=face_point(1,1)*norm_vec(1)+face_point(1,2)*norm_vec(2)+face_point(1,3)*norm_vec(3)
+      lambda=(offset-norm_vec(1)*ext_point(1)-norm_vec(2)*ext_point(2)-norm_vec(3)*ext_point(3)) &
+          /(norm_vec(1)**2+norm_vec(2)**2+norm_vec(3)**2)
+      norm_vec=norm_vec*lambda
+      norm_vec=norm_vec/(SQRT(norm_vec(1)**2+norm_vec(2)**2+norm_vec(3)**2))
+
+      !figure out which side the bc is on
+      IF(ABS(MAXVAL(norm_vec)) .GT. ABS(MINVAL(norm_vec)))THEN
+        !the primary direction is positive, so this is a +x, +y, or +z face
+        IF(MAXLOC(norm_vec,1) .EQ. 1)THEN
+          !+x
+          bc_data(i,3)=2
+        ELSEIF(MAXLOC(norm_vec,1) .EQ. 2)THEN
+          !+y
+          bc_data(i,3)=4
+        ELSE
+          !+z
+          bc_data(i,3)=6
+        ENDIF
+      ELSE
+        !the primary direction is negative, so this is a -x, -y, or -z face
+        IF(MINLOC(norm_vec,1) .EQ. 1)THEN
+          !-x
+          bc_data(i,3)=1
+        ELSEIF(MINLOC(norm_vec,1) .EQ. 2)THEN
+          !-y
+          bc_data(i,3)=3
+        ELSE
+          !-z
+          bc_data(i,3)=5
+        ENDIF
+      ENDIF
+
+      !check fot see if the side is flat, it only takes one to make it not flat
+      IF(MAXVAL(ABS(norm_vec))-1.0D0 .LE. -1.0D-14)side_flat(bc_data(i,3))=.FALSE.
+    ENDDO
+  ENDSUBROUTINE compute_bc_sides
+
+  SUBROUTINE generate_bc_triangles()
+    INTEGER :: i,j,ii,jj,point_i
+    ALLOCATE(tri(tot_bcf))
+
+    !assign vertex pointers
+    DO i=1,tot_bcf
+      point_i=0
+      tri(i)%id=i
+      tri(i)%reg=tet(bc_data(i,1))%reg
+      DO j=1,4
+        !point to vertices if they are not the extruded (internal) point
+        IF(j .NE. bc_data(i,2))THEN
+          point_i=point_i+1
+          tri(i)%corner(point_i)%p => tet(bc_data(i,1))%corner(j)%p
+        ENDIF
+      ENDDO
+    ENDDO
+
+    prog=0
+    WRITE(*,'(A)',ADVANCE='NO')'Progress:'
+    !compute the tri adjacencies
+    DO i=1,tot_bcf
+      IF(MOD(i,CEILING(tot_bcf*1.0/(max_prog-1.0))) .EQ. 0)THEN
+        WRITE(*,'(A)',ADVANCE='NO')'*'
+        prog=prog+1
+      ENDIF
+      !loop over the sides of the tri
+      DO j=1,3
+        !only check if the adjacency hasn't already been found to avoid redundancy
+        IF(tri(i)%adj_id(j) .EQ. 0)THEN
+          !loop over all other tris
+          DO ii=1,tot_bcf
+            !loop over other tri's sides to see if they match only if it's on the same side to
+            !check if any match
+            IF(bc_data(i,3) .EQ. bc_data(ii,3))THEN
+              DO jj=1,3
+                !if the sides match, then assign the adjancencies
+                IF(check_side(tri(i),j,tri(ii),jj))THEN
+                  tri(i)%adj_id(j)=ii
+                  tri(ii)%adj_id(jj)=i
+                  tri(i)%adj_side(j)=jj
+                  tri(ii)%adj_side(jj)=j
+                ENDIF
+              ENDDO
+            ENDIF
+          ENDDO
+        ENDIF
+      ENDDO
+    ENDDO
+
+    DO i=prog,max_prog
+      WRITE(*,'(A)',ADVANCE='NO')'*'
+    ENDDO
+    WRITE(*,*)
+  ENDSUBROUTINE generate_bc_triangles
+
+  !check to see if two sides match
+  LOGICAL FUNCTION check_side(tri1,side1,tri2,side2)
+    TYPE(element_type_2d), INTENT(IN) :: tri1,tri2
+    INTEGER, INTENT(IN) :: side1,side2
+    INTEGER :: p1,p2,pp1,pp2
+    check_side=.FALSE.
+    !find first side points
+    SELECTCASE(side1)
+      CASE(1)
+        p1=tri1%corner(2)%p%id
+        p2=tri1%corner(3)%p%id
+      CASE(2)
+        p1=tri1%corner(1)%p%id
+        p2=tri1%corner(3)%p%id
+      CASE(3)
+        p1=tri1%corner(1)%p%id
+        p2=tri1%corner(2)%p%id
+      CASE DEFAULT
+        STOP 'side 1 must be 1 to 3'
+    ENDSELECT
+    !find second side points
+    SELECTCASE(side2)
+      CASE(1)
+        pp1=tri2%corner(2)%p%id
+        pp2=tri2%corner(3)%p%id
+      CASE(2)
+        pp1=tri2%corner(1)%p%id
+        pp2=tri2%corner(3)%p%id
+      CASE(3)
+        pp1=tri2%corner(1)%p%id
+        pp2=tri2%corner(2)%p%id
+      CASE DEFAULT
+        STOP 'side 2 must be 1 to 3'
+    ENDSELECT
+    IF(pp1 .EQ. p1 .AND. pp2 .EQ. p2)THEN
+      check_side=.TRUE.
+    ELSEIF(pp2 .EQ. p1 .AND. pp1 .EQ. p2)THEN
+      check_side=.TRUE.
+    ELSE
+      check_side=.FALSE.
+    ENDIF
+  ENDFUNCTION
+
+  !cross product
+  FUNCTION cross(a, b)
+    REAL(8) :: cross(3)
+    REAL(8), INTENT(IN) :: a(3), b(3)
+
+    cross(1) = a(2) * b(3) - a(3) * b(2)
+    cross(2) = a(3) * b(1) - a(1) * b(3)
+    cross(3) = a(1) * b(2) - a(2) * b(1)
+  ENDFUNCTION cross
 END MODULE boundary_conditions
