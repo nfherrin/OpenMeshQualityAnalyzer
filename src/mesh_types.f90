@@ -131,7 +131,7 @@ CONTAINS
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !computes radius of the circumsphere around a tet
+  !computes radius of the circumsphere around a tet
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   REAL(8) FUNCTION sphere_rad(this_tet)
@@ -182,7 +182,7 @@ CONTAINS
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !computes radius of the circumcircle around a tet
+  !computes radius of the circumcircle around a tet
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   REAL(8) FUNCTION circ_rad(this_tri)
@@ -198,14 +198,14 @@ CONTAINS
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !computes the distance to another vertex
+  !computes the distance to another vertex
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    REAL(8) FUNCTION distance(a,b)
-      CLASS(vertex_type), INTENT(IN) :: a
-      TYPE(vertex_type), INTENT(IN) :: b
+  REAL(8) FUNCTION distance(a,b)
+    CLASS(vertex_type), INTENT(IN) :: a
+    TYPE(vertex_type), INTENT(IN) :: b
 
-      distance=SQRT((a%x-b%x)**2+(a%y-b%y)**2+(a%z-b%z)**2)
-    ENDFUNCTION distance
+    distance=SQRT((a%x-b%x)**2+(a%y-b%y)**2+(a%z-b%z)**2)
+  ENDFUNCTION distance
 
 END MODULE mesh_types

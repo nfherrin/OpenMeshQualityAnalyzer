@@ -10,11 +10,11 @@ MODULE mesh_analyze_3d
   PUBLIC :: assign_tets,mesh_vol_analysis,mesh_skew_analysis,mesh_ar_analysis,mesh_smooth_analysis
 CONTAINS
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !assigns tets to each region
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE assign_tets()
     INTEGER, ALLOCATABLE :: reg_tet_id(:)
     INTEGER :: i
@@ -42,11 +42,11 @@ CONTAINS
     ENDDO
   ENDSUBROUTINE assign_tets
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !volume analysis of a mesh
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE mesh_vol_analysis(this_mesh)
     TYPE(mesh_type_3d), INTENT(INOUT) :: this_mesh
     INTEGER :: i
@@ -65,65 +65,65 @@ CONTAINS
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !skew analysis of a mesh
+  !skew analysis of a mesh
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    SUBROUTINE mesh_skew_analysis(this_mesh)
-      TYPE(mesh_type_3d), INTENT(INOUT) :: this_mesh
-      INTEGER :: i
-      this_mesh%skew_avg=0
-      DO i=1,this_mesh%num_el
-        this_mesh%skew_avg=this_mesh%skew_avg+this_mesh%tet(i)%p%skew
-      ENDDO
-      this_mesh%skew_avg=this_mesh%skew_avg/(this_mesh%num_el*1.0D0)
+  SUBROUTINE mesh_skew_analysis(this_mesh)
+    TYPE(mesh_type_3d), INTENT(INOUT) :: this_mesh
+    INTEGER :: i
+    this_mesh%skew_avg=0
+    DO i=1,this_mesh%num_el
+      this_mesh%skew_avg=this_mesh%skew_avg+this_mesh%tet(i)%p%skew
+    ENDDO
+    this_mesh%skew_avg=this_mesh%skew_avg/(this_mesh%num_el*1.0D0)
 
-      this_mesh%skew_sd=0
-      DO i=1,this_mesh%num_el
-        this_mesh%skew_sd=this_mesh%skew_sd+(this_mesh%tet(i)%p%skew-this_mesh%skew_avg)**2
-      ENDDO
-      this_mesh%skew_sd=SQRT(this_mesh%skew_sd/(this_mesh%num_el-1.0D0))
-    ENDSUBROUTINE mesh_skew_analysis
+    this_mesh%skew_sd=0
+    DO i=1,this_mesh%num_el
+      this_mesh%skew_sd=this_mesh%skew_sd+(this_mesh%tet(i)%p%skew-this_mesh%skew_avg)**2
+    ENDDO
+    this_mesh%skew_sd=SQRT(this_mesh%skew_sd/(this_mesh%num_el-1.0D0))
+  ENDSUBROUTINE mesh_skew_analysis
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !aspect ratio analysis of a mesh
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      SUBROUTINE mesh_ar_analysis(this_mesh)
-        TYPE(mesh_type_3d), INTENT(INOUT) :: this_mesh
-        INTEGER :: i
-        this_mesh%ar_avg=0
-        DO i=1,this_mesh%num_el
-          this_mesh%ar_avg=this_mesh%ar_avg+this_mesh%tet(i)%p%aspect_ratio
-        ENDDO
-        this_mesh%ar_avg=this_mesh%ar_avg/(this_mesh%num_el*1.0D0)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !aspect ratio analysis of a mesh
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE mesh_ar_analysis(this_mesh)
+    TYPE(mesh_type_3d), INTENT(INOUT) :: this_mesh
+    INTEGER :: i
+    this_mesh%ar_avg=0
+    DO i=1,this_mesh%num_el
+      this_mesh%ar_avg=this_mesh%ar_avg+this_mesh%tet(i)%p%aspect_ratio
+    ENDDO
+    this_mesh%ar_avg=this_mesh%ar_avg/(this_mesh%num_el*1.0D0)
 
-        this_mesh%ar_sd=0
-        DO i=1,this_mesh%num_el
-          this_mesh%ar_sd=this_mesh%ar_sd+(this_mesh%tet(i)%p%aspect_ratio-this_mesh%ar_avg)**2
-        ENDDO
-        this_mesh%ar_sd=SQRT(this_mesh%ar_sd/(this_mesh%num_el-1.0D0))
-      ENDSUBROUTINE mesh_ar_analysis
+    this_mesh%ar_sd=0
+    DO i=1,this_mesh%num_el
+      this_mesh%ar_sd=this_mesh%ar_sd+(this_mesh%tet(i)%p%aspect_ratio-this_mesh%ar_avg)**2
+    ENDDO
+    this_mesh%ar_sd=SQRT(this_mesh%ar_sd/(this_mesh%num_el-1.0D0))
+  ENDSUBROUTINE mesh_ar_analysis
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        !smoothness analysis of a mesh
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        SUBROUTINE mesh_smooth_analysis(this_mesh)
-          TYPE(mesh_type_3d), INTENT(INOUT) :: this_mesh
-          INTEGER :: i
-          this_mesh%smooth_avg=0
-          DO i=1,this_mesh%num_el
-            this_mesh%smooth_avg=this_mesh%smooth_avg+this_mesh%tet(i)%p%smoothness
-          ENDDO
-          this_mesh%smooth_avg=this_mesh%smooth_avg/(this_mesh%num_el*1.0D0)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !smoothness analysis of a mesh
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE mesh_smooth_analysis(this_mesh)
+    TYPE(mesh_type_3d), INTENT(INOUT) :: this_mesh
+    INTEGER :: i
+    this_mesh%smooth_avg=0
+    DO i=1,this_mesh%num_el
+      this_mesh%smooth_avg=this_mesh%smooth_avg+this_mesh%tet(i)%p%smoothness
+    ENDDO
+    this_mesh%smooth_avg=this_mesh%smooth_avg/(this_mesh%num_el*1.0D0)
 
-          this_mesh%smooth_sd=0
-          DO i=1,this_mesh%num_el
-            this_mesh%smooth_sd=this_mesh%smooth_sd+(this_mesh%tet(i)%p%smoothness&
-                -this_mesh%smooth_avg)**2
-          ENDDO
-          this_mesh%smooth_sd=SQRT(this_mesh%smooth_sd/(this_mesh%num_el-1.0D0))
-        ENDSUBROUTINE mesh_smooth_analysis
+    this_mesh%smooth_sd=0
+    DO i=1,this_mesh%num_el
+      this_mesh%smooth_sd=this_mesh%smooth_sd+(this_mesh%tet(i)%p%smoothness&
+          -this_mesh%smooth_avg)**2
+    ENDDO
+    this_mesh%smooth_sd=SQRT(this_mesh%smooth_sd/(this_mesh%num_el-1.0D0))
+  ENDSUBROUTINE mesh_smooth_analysis
 END MODULE mesh_analyze_3d
