@@ -150,6 +150,7 @@ CONTAINS
     bc_locs(4)=MAXVAL(vertex(:)%y)
     bc_locs(5)=MINVAL(vertex(:)%z)
     bc_locs(6)=MAXVAL(vertex(:)%z)
+    ext_point=0
 
     IF(MINVAL(bc_data(:,2)) .LE. 0 .OR. MAXVAL(bc_data(:,2)) .GE. 5)THEN
       WRITE(*,*)'error, bc faces werent increased',MINVAL(bc_data(:,2)),MAXVAL(bc_data(:,2))
