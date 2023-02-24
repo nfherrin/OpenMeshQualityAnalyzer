@@ -9,13 +9,15 @@ PROGRAM openmeshqualityanalyzer
   USE out_stats
   USE read_thrm
   USE mesh_analyze_3d
+  USE mesh_analyze_2d
   USE tet_analyze
+  USE tri_analyze
   USE boundary_conditions
   USE mesh_2d_construct
   IMPLICIT NONE
 
   !> The number of provided command line arguments
-  INTEGER :: arg_count,i
+  INTEGER :: arg_count,i,j
 
   !type of mesh format
   CHARACTER(20) :: mesh_format="",tchar1,tchar2
@@ -119,6 +121,66 @@ PROGRAM openmeshqualityanalyzer
   DO i=1,6
     CALL construct_bc_mesh(tot_side_mesh(i),reg_side_mesh(i,:),i)
   ENDDO
+
+  WRITE(*,'(A)')'----------------------- Calculating 2D areas:'
+  CALL calc_tri_areas()
+  !for each mesh structure
+  DO i=1,6
+    CALL mesh_2d_area_analysis(tot_side_mesh(i))
+    DO j=minreg,maxreg
+      IF(reg_side_mesh(i,j)%num_el .GT. 0)CALL mesh_2d_area_analysis(reg_side_mesh(i,j))
+    ENDDO
+  ENDDO
+  !finish up progress bar
+  DO i=prog,max_prog
+    WRITE(*,'(A)',ADVANCE='NO')'*'
+  ENDDO
+  WRITE(*,*)
+
+  WRITE(*,'(A)')'----------------------- Calculating 2D mesh skewness:'
+  CALL comp_tri_skew()
+  !for each mesh structure
+  DO i=1,6
+    CALL mesh_2d_skew_analysis(tot_side_mesh(i))
+    DO j=minreg,maxreg
+      IF(reg_side_mesh(i,j)%num_el .GT. 0)CALL mesh_2d_skew_analysis(reg_side_mesh(i,j))
+    ENDDO
+  ENDDO
+  !finish up progress bar
+  DO i=prog,max_prog
+    WRITE(*,'(A)',ADVANCE='NO')'*'
+  ENDDO
+  WRITE(*,*)
+
+  WRITE(*,'(A)')'----------------------- Calculating 2D mesh aspect ratio:'
+  CALL comp_tri_ar()
+  !for each mesh structure
+  DO i=1,6
+    CALL mesh_2d_ar_analysis(tot_side_mesh(i))
+    DO j=minreg,maxreg
+      IF(reg_side_mesh(i,j)%num_el .GT. 0)CALL mesh_2d_ar_analysis(reg_side_mesh(i,j))
+    ENDDO
+  ENDDO
+  !finish up progress bar
+  DO i=prog,max_prog
+    WRITE(*,'(A)',ADVANCE='NO')'*'
+  ENDDO
+  WRITE(*,*)
+
+  WRITE(*,'(A)')'----------------------- Calculating 2D mesh aspect smoothness:'
+  CALL comp_tri_smooth()
+  !for each mesh structure
+  DO i=1,6
+    CALL mesh_2d_smooth_analysis(tot_side_mesh(i))
+    DO j=minreg,maxreg
+      IF(reg_side_mesh(i,j)%num_el .GT. 0)CALL mesh_2d_smooth_analysis(reg_side_mesh(i,j))
+    ENDDO
+  ENDDO
+  !finish up progress bar
+  DO i=prog,max_prog
+    WRITE(*,'(A)',ADVANCE='NO')'*'
+  ENDDO
+  WRITE(*,*)
 
   WRITE(*,'(A)')'---------------------- Outputting results to '//TRIM(ADJUSTL(mesh_infile))//&
       '_stats.csv'

@@ -65,4 +65,25 @@ MODULE globals
   REAL(8),PARAMETER :: PI=4.D0*DATAN(1.D0)
 CONTAINS
 
+  !all the sorts are very small so bubble sort is fine
+  SUBROUTINE bubble_sort(vec)
+    REAL(8),INTENT(INOUT) :: vec(:)
+    INTEGER :: m,i,changes
+    REAL(8) :: tempr
+
+    m=SIZE(vec)
+    DO
+      changes=0
+      DO i=1,m-1
+        IF(vec(i) .GT. vec(i+1))THEN
+          tempr=vec(i)
+          vec(i)=vec(i+1)
+          vec(i+1)=tempr
+          changes=changes+1
+        ENDIF
+      ENDDO
+      IF(changes .EQ. 0)EXIT
+    ENDDO
+  ENDSUBROUTINE bubble_sort
+
 END MODULE globals

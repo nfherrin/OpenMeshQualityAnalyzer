@@ -24,7 +24,9 @@ SRC := \
 				main.f90 \
 				globals.f90 \
 				mesh_analyze_3d.f90 \
+				mesh_analyze_2d.f90 \
 				tet_analyze.f90 \
+				tri_analyze.f90 \
 				boundary_conditions.f90 \
 				out_stats.f90 \
 				mesh_types.f90 \
@@ -99,9 +101,12 @@ boundary_conditions.o boundary_conditions.mod: boundary_conditions.f90 \
  globals.mod
 globals.o globals.mod: globals.f90 mesh_types.mod
 main.o: main.f90 globals.mod read_gmsh.mod read_thrm.mod mesh_analyze_3d.mod \
- boundary_conditions.mod out_stats.mod tet_analyze.mod mesh_2d_construct.mod
+ boundary_conditions.mod out_stats.mod tet_analyze.mod mesh_2d_construct.mod \
+ mesh_analyze_2d.mod tri_analyze.mod
 mesh_analyze_3d.o mesh_analyze_3d.mod: mesh_analyze_3d.f90 globals.mod
+mesh_analyze_2d.o mesh_analyze_2d.mod: mesh_analyze_2d.f90 globals.mod
 tet_analyze.o tet_analyze.mod: tet_analyze.f90 globals.mod
+tri_analyze.o tri_analyze.mod: tri_analyze.f90 globals.mod
 read_gmsh.o read_gmsh.mod: read_gmsh.f90 globals.mod
 read_thrm.o read_thrm.mod: read_thrm.f90 globals.mod
 mesh_2d_construct.o mesh_2d_construct.mod: mesh_2d_construct.f90 globals.mod

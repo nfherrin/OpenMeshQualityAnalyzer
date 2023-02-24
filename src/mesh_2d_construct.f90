@@ -22,6 +22,7 @@ CONTAINS
     ALLOCATE(reg_tri_id(minreg:maxreg))
     reg_tri_id=0
 
+    !only construct a side mesh if it's flat
     IF(side_flat(side_id))THEN
       DO i=1,tot_bcf
         IF(bc_data(i,3) .EQ. side_id)this_mesh%num_el=this_mesh%num_el+1
