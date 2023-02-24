@@ -32,6 +32,9 @@ MODULE globals
   !element data (tot_tets) indices of vertices of element
   TYPE(element_type_3d), TARGET, ALLOCATABLE :: tet(:)
 
+  !triangles on the surfaces, even the non-flat ones
+  TYPE(element_type_2d), TARGET, ALLOCATABLE :: tri(:)
+
   !boundary conditions data. (num_bcf,3) first data column is element id,
   !second data column is face id,
   !and third data column is direction 1 to 6 ordered -x +x -y +y -z +z

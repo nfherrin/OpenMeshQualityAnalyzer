@@ -1,9 +1,9 @@
 !OpenMeshQualityAnalyzer is licensed under the MIT License.
 !-------------------------------------------------------------------------------
-!> This module contains the functionality necessary to analyze mesh quality indicators
+!> This module contains the functionality necessary to analyze 3d mesh quality indicators
 !> @author Nicholas F. Herring
 !-------------------------------------------------------------------------------
-MODULE mesh_analyze
+MODULE mesh_analyze_3d
   USE globals
   IMPLICIT NONE
   PRIVATE
@@ -126,4 +126,4 @@ CONTAINS
           ENDDO
           this_mesh%smooth_sd=SQRT(this_mesh%smooth_sd/(this_mesh%num_el-1.0D0))
         ENDSUBROUTINE mesh_smooth_analysis
-END MODULE mesh_analyze
+END MODULE mesh_analyze_3d

@@ -23,7 +23,7 @@ coverage: OPT := -O0 -g --coverage -Wall -Werror
 SRC := \
 				main.f90 \
 				globals.f90 \
-				mesh_analyze.f90 \
+				mesh_analyze_3d.f90 \
 				tet_analyze.f90 \
 				boundary_conditions.f90 \
 				out_stats.f90 \
@@ -98,9 +98,9 @@ $(EXE): $(OBJ) $(CONT_OBJ) $(LIB_OBJ)
 boundary_conditions.o boundary_conditions.mod: boundary_conditions.f90 \
  globals.mod
 globals.o globals.mod: globals.f90 mesh_types.mod
-main.o: main.f90 globals.mod read_gmsh.mod read_thrm.mod mesh_analyze.mod \
+main.o: main.f90 globals.mod read_gmsh.mod read_thrm.mod mesh_analyze_3d.mod \
  boundary_conditions.mod out_stats.mod tet_analyze.mod mesh_2d_construct.mod
-mesh_analyze.o mesh_analyze.mod: mesh_analyze.f90 globals.mod
+mesh_analyze_3d.o mesh_analyze_3d.mod: mesh_analyze_3d.f90 globals.mod
 tet_analyze.o tet_analyze.mod: tet_analyze.f90 globals.mod
 read_gmsh.o read_gmsh.mod: read_gmsh.f90 globals.mod
 read_thrm.o read_thrm.mod: read_thrm.f90 globals.mod

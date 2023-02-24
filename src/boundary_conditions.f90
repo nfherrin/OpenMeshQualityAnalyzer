@@ -8,7 +8,7 @@ MODULE boundary_conditions
     USE globals
     IMPLICIT NONE
     PRIVATE
-    PUBLIC :: adjacency_calc, compute_bc_sides
+    PUBLIC :: adjacency_calc, compute_bc_sides,generate_bc_triangles
 
     INTEGER, ALLOCATABLE :: tbound_cond(:,:)
 CONTAINS
@@ -212,6 +212,105 @@ CONTAINS
       IF(MAXVAL(ABS(norm_vec))-1.0D0 .LE. -1.0D-14)side_flat(bc_data(i,3))=.FALSE.
     ENDDO
   ENDSUBROUTINE compute_bc_sides
+
+  SUBROUTINE generate_bc_triangles()
+    INTEGER :: i,j,ii,jj,point_i
+    ALLOCATE(tri(tot_bcf))
+
+    !assign vertex pointers
+    DO i=1,tot_bcf
+      point_i=0
+      tri(i)%id=i
+      tri(i)%reg=tet(bc_data(i,1))%reg
+      DO j=1,4
+        !point to vertices if they are not the extruded (internal) point
+        IF(j .NE. bc_data(i,2))THEN
+          point_i=point_i+1
+          tri(i)%corner(point_i)%p => tet(bc_data(i,1))%corner(j)%p
+        ENDIF
+      ENDDO
+    ENDDO
+
+    prog=0
+    WRITE(*,'(A)',ADVANCE='NO')'Progress:'
+    !compute the tri adjacencies
+    DO i=1,tot_bcf
+      IF(MOD(i,CEILING(tot_bcf*1.0/(max_prog-1.0))) .EQ. 0)THEN
+        WRITE(*,'(A)',ADVANCE='NO')'*'
+        prog=prog+1
+      ENDIF
+      !loop over the sides of the tri
+      DO j=1,3
+        !only check if the adjacency hasn't already been found to avoid redundancy
+        IF(tri(i)%adj_id(j) .EQ. 0)THEN
+          !loop over all other tris
+          DO ii=1,tot_bcf
+            !loop over other tri's sides to see if they match only if it's on the same side to
+            !check if any match
+            IF(bc_data(i,3) .EQ. bc_data(ii,3))THEN
+              DO jj=1,3
+                !if the sides match, then assign the adjancencies
+                IF(check_side(tri(i),j,tri(ii),jj))THEN
+                  tri(i)%adj_id(j)=ii
+                  tri(ii)%adj_id(jj)=i
+                  tri(i)%adj_side(j)=jj
+                  tri(ii)%adj_side(jj)=j
+                ENDIF
+              ENDDO
+            ENDIF
+          ENDDO
+        ENDIF
+      ENDDO
+    ENDDO
+
+    DO i=prog,max_prog
+      WRITE(*,'(A)',ADVANCE='NO')'*'
+    ENDDO
+    WRITE(*,*)
+  ENDSUBROUTINE generate_bc_triangles
+
+  !check to see if two sides match
+  LOGICAL FUNCTION check_side(tri1,side1,tri2,side2)
+    TYPE(element_type_2d), INTENT(IN) :: tri1,tri2
+    INTEGER, INTENT(IN) :: side1,side2
+    INTEGER :: p1,p2,pp1,pp2
+    check_side=.FALSE.
+    !find first side points
+    SELECTCASE(side1)
+      CASE(1)
+        p1=tri1%corner(2)%p%id
+        p2=tri1%corner(3)%p%id
+      CASE(2)
+        p1=tri1%corner(1)%p%id
+        p2=tri1%corner(3)%p%id
+      CASE(3)
+        p1=tri1%corner(1)%p%id
+        p2=tri1%corner(2)%p%id
+      CASE DEFAULT
+        STOP 'side 1 must be 1 to 3'
+    ENDSELECT
+    !find second side points
+    SELECTCASE(side2)
+      CASE(1)
+        pp1=tri2%corner(2)%p%id
+        pp2=tri2%corner(3)%p%id
+      CASE(2)
+        pp1=tri2%corner(1)%p%id
+        pp2=tri2%corner(3)%p%id
+      CASE(3)
+        pp1=tri2%corner(1)%p%id
+        pp2=tri2%corner(2)%p%id
+      CASE DEFAULT
+        STOP 'side 2 must be 1 to 3'
+    ENDSELECT
+    IF(pp1 .EQ. p1 .AND. pp2 .EQ. p2)THEN
+      check_side=.TRUE.
+    ELSEIF(pp2 .EQ. p1 .AND. pp1 .EQ. p2)THEN
+      check_side=.TRUE.
+    ELSE
+      check_side=.FALSE.
+    ENDIF
+  ENDFUNCTION
 
   !cross product
   FUNCTION cross(a, b)

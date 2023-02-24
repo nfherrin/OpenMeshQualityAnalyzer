@@ -8,7 +8,7 @@ PROGRAM openmeshqualityanalyzer
   USE read_gmsh
   USE out_stats
   USE read_thrm
-  USE mesh_analyze
+  USE mesh_analyze_3d
   USE tet_analyze
   USE boundary_conditions
   USE mesh_2d_construct
@@ -114,8 +114,10 @@ PROGRAM openmeshqualityanalyzer
   WRITE(*,*)
 
   WRITE(*,'(A)')'----------------------- Constructing 2D Meshes:'
+  CALL generate_bc_triangles()
+  ALLOCATE(reg_side_mesh(6,minreg:maxreg))
   DO i=1,6
-    CALL construct_bc_mesh(tot_side_mesh(i),i)
+    CALL construct_bc_mesh(tot_side_mesh(i),reg_side_mesh(i,:),i)
   ENDDO
 
   WRITE(*,'(A)')'---------------------- Outputting results to '//TRIM(ADJUSTL(mesh_infile))//&
