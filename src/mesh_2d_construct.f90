@@ -14,7 +14,7 @@ CONTAINS
   !constructs a 2D bc mesh for a given side
   SUBROUTINE construct_bc_mesh(this_mesh,this_mesh_reg,side_id)
     TYPE(mesh_type_2d), INTENT(INOUT) :: this_mesh
-    TYPE(mesh_type_2d), INTENT(INOUT) :: this_mesh_reg(:)
+    TYPE(mesh_type_2d), INTENT(INOUT) :: this_mesh_reg(minreg:maxreg)
     INTEGER, INTENT(IN) :: side_id
     INTEGER :: i=0,el_id=0
     INTEGER, ALLOCATABLE :: reg_tri_id(:)
